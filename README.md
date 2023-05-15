@@ -41,3 +41,9 @@ $ npm run test:e2e
 # test coverage
 $ npm run test:cov
 ```
+
+## Database Model Changes
+
+Any time a model in the schema file is modified in any way, you must run `npx prisma generate`. This command must be run after every change to Prisma models to update the generated Prisma Client.
+
+**Note: The prisma generate command reads the Prisma schema and updates the generated Prisma Client library inside node_modules/@prisma/client.**
