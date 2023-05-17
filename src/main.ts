@@ -31,6 +31,7 @@ async function bootstrap() {
     const config = new DocumentBuilder()
       .setTitle('Altera')
       .setDescription('The Altera API Suite')
+      .addBearerAuth()
       .setVersion(version)
       .build();
     const document = SwaggerModule.createDocument(app, config);
