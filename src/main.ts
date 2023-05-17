@@ -1,15 +1,21 @@
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, Reflector } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { readFileSync } from 'fs';
 import { AppModule } from './app.module';
-import { Logger, ValidationPipe } from '@nestjs/common';
+import {
+  ClassSerializerInterceptor,
+  Logger,
+  ValidationPipe,
+} from '@nestjs/common';
 
 const APP_PORT = 3000;
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { abortOnError: false });
 
+  // Nest specific settings
   app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 
   const packageJson = readFileSync('./package.json', 'utf-8');
   const { version }: { version: string } = JSON.parse(packageJson);
