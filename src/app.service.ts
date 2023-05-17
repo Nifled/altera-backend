@@ -6,7 +6,7 @@ export class AppService {
     const databaseUrl = process.env.DATABASE_URL;
 
     if (!databaseUrl) {
-      throw new Error(`Environment variables are missing: DATABASE_URL`);
+      throw new Error(`Environment variables are missing.`);
     }
   }
 
