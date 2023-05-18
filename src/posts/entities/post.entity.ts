@@ -5,7 +5,7 @@ export class PostEntity implements Post {
   @ApiProperty()
   id: string;
 
-  @ApiProperty({ required: false })
+  @ApiProperty()
   caption: string;
 
   @ApiProperty()
