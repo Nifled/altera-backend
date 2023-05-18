@@ -1,13 +1,27 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import {
+  ValidationOptions,
   ValidatorConstraint,
   ValidatorConstraintInterface,
+  registerDecorator,
 } from 'class-validator';
 import { UsersService } from '../users.service';
 
+// Custom Decorator (uses `UserIdExistsValidator`)
+export function IsValidUserId(validationOptions?: ValidationOptions) {
+  return function (object: any, propertyName: string) {
+    registerDecorator({
+      target: object.constructor,
+      propertyName: propertyName,
+      options: validationOptions,
+      validator: UserIdExistsValidator,
+    });
+  };
+}
+
 @ValidatorConstraint({ async: true })
 @Injectable()
-export class UserIdExists implements ValidatorConstraintInterface {
+export class UserIdExistsValidator implements ValidatorConstraintInterface {
   constructor(private readonly userService: UsersService) {}
 
   async validate(userId: string) {
