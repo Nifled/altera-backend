@@ -60,6 +60,7 @@ export class UsersController {
   @ApiBearerAuth()
   @ApiCreatedResponse({ type: UserEntity })
   async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+    // TODO: validate user exists?
     return new UserEntity(await this.usersService.update(id, updateUserDto));
   }
 
