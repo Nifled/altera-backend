@@ -7,6 +7,7 @@ import {
   Logger,
   ValidationPipe,
 } from '@nestjs/common';
+import { useContainer } from 'class-validator';
 
 const APP_PORT = 3000;
 
@@ -16,6 +17,8 @@ async function bootstrap() {
   // Nest specific settings
   app.useGlobalPipes(new ValidationPipe());
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
+  // Enable Dependency Injection for class-validator
+  useContainer(app.select(AppModule), { fallbackOnErrors: true });
 
   const packageJson = readFileSync('./package.json', 'utf-8');
   const { version }: { version: string } = JSON.parse(packageJson);
