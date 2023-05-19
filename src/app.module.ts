@@ -4,8 +4,10 @@ import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { PostsModule } from './posts/posts.module';
 import { UsersModule } from './users/users.module';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -13,12 +15,23 @@ import { UsersModule } from './users/users.module';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    ThrottlerModule.forRoot({
+      ttl: Number(process.env.THROTTLER_TTL_SECS),
+      limit: Number(process.env.THROTTLER_REQ_LIMIT),
+    }),
     PrismaModule,
     AuthModule,
     PostsModule,
     UsersModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      // Apply rate limiting globally to every endpoint
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}
