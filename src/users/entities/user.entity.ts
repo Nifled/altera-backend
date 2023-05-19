@@ -18,10 +18,10 @@ export class UserEntity implements User {
   @ApiProperty()
   updatedAt: Date;
 
-  @ApiProperty()
+  @ApiProperty({ nullable: true, type: String })
   firstName: string | null;
 
-  @ApiProperty()
+  @ApiProperty({ nullable: true, type: String })
   lastName: string | null;
 
   @ApiProperty()
