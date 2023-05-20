@@ -1,4 +1,4 @@
-import { NestFactory, Reflector } from '@nestjs/core';
+import { HttpAdapterHost, NestFactory, Reflector } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { readFileSync } from 'fs';
 import { AppModule } from './app.module';
@@ -8,15 +8,18 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { useContainer } from 'class-validator';
+import { PrismaClientExceptionFilter } from './prisma/filters/prisma-client-exception/prisma-client-exception.filter';
 
 const APP_PORT = 3000;
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { abortOnError: false });
+  const { httpAdapter } = app.get(HttpAdapterHost);
 
   // Nest specific settings
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
+  app.useGlobalFilters(new PrismaClientExceptionFilter(httpAdapter));
   // Enable Dependency Injection for class-validator
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
 

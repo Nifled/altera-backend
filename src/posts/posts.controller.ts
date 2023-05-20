@@ -46,14 +46,12 @@ export class PostsController {
   @Patch(':id')
   @ApiOkResponse({ type: PostEntity })
   update(@Param('id') id: string, @Body() updatePostDto: UpdatePostDto) {
-    // TODO: validate post exists?
     return this.postsService.update(id, updatePostDto);
   }
 
   @Delete(':id')
   @ApiOkResponse({ type: PostEntity })
   remove(@Param('id') id: string) {
-    // TODO: validate post exists?
     return this.postsService.remove(id);
   }
 }
