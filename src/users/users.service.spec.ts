@@ -12,7 +12,7 @@ const USERS_ARRAY: Partial<User>[] = [
 const ONE_USER = USERS_ARRAY[0];
 const PASSWORD = 'trustno1';
 
-const db = {
+const DB = {
   user: {
     findMany: jest.fn().mockResolvedValue(USERS_ARRAY),
     findUnique: jest.fn().mockResolvedValue(ONE_USER),
@@ -28,7 +28,7 @@ describe('UsersService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [UsersService, { provide: PrismaService, useValue: db }],
+      providers: [UsersService, { provide: PrismaService, useValue: DB }],
     }).compile();
 
     service = module.get<UsersService>(UsersService);

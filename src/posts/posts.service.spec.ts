@@ -11,7 +11,7 @@ const POSTS_ARRAY: Partial<Post>[] = [
 ];
 const ONE_POST = POSTS_ARRAY[0];
 
-const db = {
+const DB = {
   post: {
     findMany: jest.fn().mockResolvedValue(POSTS_ARRAY),
     findUnique: jest.fn().mockResolvedValue(ONE_POST),
@@ -27,7 +27,7 @@ describe('PostsService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [PostsService, { provide: PrismaService, useValue: db }],
+      providers: [PostsService, { provide: PrismaService, useValue: DB }],
     }).compile();
 
     service = module.get<PostsService>(PostsService);
