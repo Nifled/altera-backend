@@ -4,6 +4,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { User } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { PasswordService } from '../auth/password.service';
 
 const USERS_ARRAY: Partial<User>[] = [
   { firstName: 'Denzel', lastName: 'Curry', email: 'denzel@ult.com' },
@@ -28,7 +29,11 @@ describe('UsersService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [UsersService, { provide: PrismaService, useValue: DB }],
+      providers: [
+        UsersService,
+        PasswordService,
+        { provide: PrismaService, useValue: DB },
+      ],
     }).compile();
 
     service = module.get<UsersService>(UsersService);

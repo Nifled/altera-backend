@@ -19,5 +19,6 @@ const JWTAuthModule = JwtModule.register({
   imports: [PrismaModule, PassportModule, JWTAuthModule, UsersModule],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy, PasswordService],
+  exports: [PasswordService],
 })
 export class AuthModule {}
