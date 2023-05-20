@@ -26,12 +26,23 @@ async function bootstrap() {
   const packageJson = readFileSync('./package.json', 'utf-8');
   const { version }: { version: string } = JSON.parse(packageJson);
 
+  // Throw error if env vars aren't set up
+  checkForDatabaseUrl();
+
   // Set up Swagger
   loadSwagger();
 
   await app.listen(APP_PORT);
   Logger.verbose(`App is now running on port=${APP_PORT}`);
   Logger.verbose('APP VERSION', version);
+
+  function checkForDatabaseUrl() {
+    const databaseUrl = process.env.DATABASE_URL;
+
+    if (!databaseUrl) {
+      throw new Error(`Environment variables are missing.`);
+    }
+  }
 
   function loadSwagger() {
     const config = new DocumentBuilder()
