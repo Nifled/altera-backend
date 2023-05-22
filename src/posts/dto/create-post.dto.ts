@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsOptional, IsString, MaxLength } from 'class-validator';
-import { IsValidUserId } from '../../users/validators/user-id-exists.validator';
+import { IsValidUserId } from '../../users/pipes/user-id-exists.pipe';
 
 export class CreatePostDto {
   @IsOptional()
