@@ -8,6 +8,7 @@ import {
   Delete,
   NotFoundException,
   UseGuards,
+  UsePipes,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -20,6 +21,7 @@ import {
 } from '@nestjs/swagger';
 import { UserEntity } from './entities/user.entity';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { PayloadExistsPipe } from '../common/pipes/payload-exists.pipe';
 
 @Controller('users')
 @ApiTags('users')
@@ -28,6 +30,7 @@ export class UsersController {
 
   @Post()
   @ApiCreatedResponse({ type: UserEntity })
+  @UsePipes(new PayloadExistsPipe())
   async create(@Body() createUserDto: CreateUserDto) {
     return new UserEntity(await this.usersService.create(createUserDto));
   }
@@ -59,8 +62,8 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiCreatedResponse({ type: UserEntity })
+  @UsePipes(new PayloadExistsPipe())
   async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    // TODO: validate user exists?
     return new UserEntity(await this.usersService.update(id, updateUserDto));
   }
 
