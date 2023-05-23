@@ -39,7 +39,11 @@ export class UserIdExistsPipe implements ValidatorConstraintInterface {
       if (!user) {
         throw new NotFoundException(`User not found with id: ${userId}.`);
       }
-    } catch {
+    } catch (e) {
+      if (e instanceof NotFoundException) {
+        throw e;
+      }
+
       throw new BadRequestException(this.defaultMessage());
     }
 
