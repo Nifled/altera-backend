@@ -2,11 +2,11 @@ import {
   ArgumentsHost,
   Catch,
   ExceptionFilter,
-  HttpException,
   HttpStatus,
 } from '@nestjs/common';
 import { BaseExceptionFilter } from '@nestjs/core';
 import { Prisma } from '@prisma/client';
+import { Response } from 'express';
 
 // All Prisma Client Error codes: https://www.prisma.io/docs/reference/api-reference/error-reference#prisma-client-query-engine
 type PrismaErrorCodes = {
@@ -22,6 +22,9 @@ export class PrismaClientExceptionFilter
   implements ExceptionFilter
 {
   catch(exception: Prisma.PrismaClientKnownRequestError, host: ArgumentsHost) {
+    const ctx = host.switchToHttp();
+    const response = ctx.getResponse<Response>();
+
     const prismaErrorCode = exception.code as PrismaErrorCodesValue;
     const message = `[${prismaErrorCode}]: ${this.shortenExceptionMessage(
       exception.message,
@@ -30,43 +33,34 @@ export class PrismaClientExceptionFilter
     switch (prismaErrorCode) {
       case 'P2000':
         const badRequestCode = HttpStatus.BAD_REQUEST;
-
-        super.catch(
-          new HttpException(
-            { statusCode: badRequestCode, message },
-            badRequestCode,
-          ),
-          host,
-        );
+        // Return the correct response for this bad request
+        response.status(badRequestCode).json({
+          statusCode: badRequestCode,
+          message,
+        });
         break;
 
       case 'P2002':
         const conflictCode = HttpStatus.CONFLICT;
 
-        super.catch(
-          new HttpException(
-            { statusCode: conflictCode, message },
-            conflictCode,
-          ),
-          host,
-        );
+        response.status(conflictCode).json({
+          statusCode: conflictCode,
+          message,
+        });
         break;
 
       case 'P2025':
         const notFoundCode = HttpStatus.NOT_FOUND;
 
-        super.catch(
-          new HttpException(
-            { statusCode: notFoundCode, message },
-            notFoundCode,
-          ),
-          host,
-        );
-
+        response.status(notFoundCode).json({
+          statusCode: notFoundCode,
+          message,
+        });
         break;
 
       default:
         super.catch(exception, host);
+        break;
     }
   }
 
