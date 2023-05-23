@@ -22,7 +22,7 @@ const DB = {
   },
 };
 
-const BCRYPT = {
+const PASSWORD_SERVICE = {
   hashPassword: jest.fn().mockResolvedValue(PASSWORD),
   validatePassword: jest.fn().mockResolvedValue(true),
 };
@@ -37,7 +37,7 @@ describe('AuthService', () => {
       providers: [
         AuthService,
         JwtService,
-        { provide: PasswordService, useValue: BCRYPT },
+        { provide: PasswordService, useValue: PASSWORD_SERVICE },
         { provide: PrismaService, useValue: DB },
       ],
     }).compile();
