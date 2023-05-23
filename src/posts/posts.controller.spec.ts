@@ -52,7 +52,7 @@ describe('PostsController', () => {
   });
 
   describe('GET /posts findAll()', () => {
-    it('should return an array of users', async () => {
+    it('should return an array of posts', async () => {
       const findAllSpy = jest.spyOn(service, 'findAll');
       const posts = await controller.findAll();
 
@@ -62,11 +62,11 @@ describe('PostsController', () => {
   });
 
   describe('GET /posts findOne()', () => {
-    it('should return a user', async () => {
-      const findAllSpy = jest.spyOn(service, 'findOne');
+    it('should return a post', async () => {
+      const findOneSpy = jest.spyOn(service, 'findOne');
       const post = await controller.findOne('1');
 
-      expect(findAllSpy).toBeCalledWith('1');
+      expect(findOneSpy).toBeCalledWith('1');
       expect(post).toEqual(ONE_POST);
     });
   });
@@ -74,7 +74,7 @@ describe('PostsController', () => {
   describe('PATCH /posts update()', () => {
     const udpatePostDto = new UpdatePostDto();
 
-    it('should return the updated user', async () => {
+    it('should return the updated post', async () => {
       const updateSpy = jest.spyOn(service, 'update');
       const post = await controller.update('1', udpatePostDto);
 
@@ -84,7 +84,7 @@ describe('PostsController', () => {
   });
 
   describe('DELETE /posts remove()', () => {
-    it('should return the removed user', async () => {
+    it('should return the removed post', async () => {
       const removeSpy = jest.spyOn(service, 'remove');
       const post = await controller.remove('1');
 
