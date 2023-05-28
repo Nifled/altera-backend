@@ -9,7 +9,7 @@ import { JwtStrategy } from './strategy/jwt.strategy';
 import { PasswordService } from './password.service';
 
 const JWTAuthModule = JwtModule.register({
-  secret: process.env.JWT_SECRET,
+  secret: process.env.JWT_ACCESS_TOKEN_SECRET,
   signOptions: {
     expiresIn: '5m',
   },

@@ -35,7 +35,7 @@ export class AuthService {
     return {
       accessToken: this.jwtService.sign(
         { userId: user.id },
-        { secret: process.env.JWT_SECRET },
+        { secret: process.env.JWT_ACCESS_TOKEN_SECRET },
       ),
     };
   }

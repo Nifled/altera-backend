@@ -68,7 +68,7 @@ describe('PostsController (e2e)', () => {
     // Generate a jwt to be used for protected routes
     bearerToken = jwt.sign(
       { userId: user.id },
-      { secret: process.env.JWT_SECRET },
+      { secret: process.env.JWT_ACCESS_TOKEN_SECRET },
     );
   });
 
@@ -186,7 +186,7 @@ describe('PostsController (e2e)', () => {
       });
       const tempUserToken = jwt.sign(
         { userId: tempUser.id },
-        { secret: process.env.JWT_SECRET },
+        { secret: process.env.JWT_ACCESS_TOKEN_SECRET },
       );
 
       const { status, body } = await request(httpServer)
