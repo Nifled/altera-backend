@@ -42,6 +42,10 @@ $ npm run test:e2e
 $ npm run test:cov
 ```
 
+### Note on e2e testing
+
+In order to get e2e tests running, the corresponding environment variables must be set in `.env.test` (for reference, see `.env.test.sample`). You can also just use the dev database 🤷 if its not too important.
+
 ## Database Model Changes
 
 Any time a model in the schema file is modified in any way, you must run `npx prisma generate`. This command must be run after every change to Prisma models to update the generated Prisma Client.
