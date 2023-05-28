@@ -16,5 +16,7 @@
     "strictBindCallApply": true,
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true
-  }
+  },
+  // compatible jest-extended typings
+  "files": ["node_modules/jest-extended/types/index.d.ts"]
 }

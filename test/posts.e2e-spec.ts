@@ -53,7 +53,7 @@ describe('PostsController (e2e)', () => {
 
     // Create a user
     const userDto: CreateUserDto = {
-      email: `user@example.com`,
+      email: `userForPosts@example.com`,
       password: 'password',
       firstName: 'John',
       lastName: 'Doe',
@@ -118,7 +118,7 @@ describe('PostsController (e2e)', () => {
   });
 
   describe('/posts (POST)', () => {
-    it('creates a post', async () => {
+    it('should create a post', async () => {
       const { status, body } = await request(httpServer)
         .post('/posts')
         .send({ caption: 'Post 4', authorId: user.id });
