@@ -162,4 +162,23 @@ describe('PostsController (e2e)', () => {
       expect(status).toBe(404);
     });
   });
+
+  describe('/posts/:id (DELETE)', () => {
+    it('should delete a post', async () => {
+      const { status, body } = await request(httpServer).delete(
+        `/posts/${post.id}`,
+      );
+
+      expect(status).toBe(200);
+      expect(body.id).toBe(post.id);
+    });
+
+    it('should fail to delete a post with wrong id', async () => {
+      const { status } = await request(httpServer).delete(
+        `/posts/someRandomId`,
+      );
+
+      expect(status).toBe(404);
+    });
+  });
 });
