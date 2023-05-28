@@ -16,10 +16,10 @@ export class CreateUserDto {
   @IsOptional()
   @IsString()
   @ApiPropertyOptional()
-  firstName: string;
+  firstName?: string;
 
   @IsOptional()
   @IsString()
   @ApiPropertyOptional()
-  lastName: string;
+  lastName?: string;
 }
