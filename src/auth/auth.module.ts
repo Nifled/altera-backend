@@ -7,6 +7,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { UsersModule } from '../users/users.module';
 import { JwtAccessStrategy } from './strategies/jwt-access.strategy';
 import { PasswordService } from './password.service';
+import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
 
 const JWTAuthModule = JwtModule.register({
   secret: process.env.JWT_ACCESS_TOKEN_SECRET,
@@ -18,6 +19,11 @@ const JWTAuthModule = JwtModule.register({
 @Module({
   imports: [PrismaModule, PassportModule, JWTAuthModule, UsersModule],
   controllers: [AuthController],
-  providers: [AuthService, JwtAccessStrategy, PasswordService],
+  providers: [
+    AuthService,
+    JwtAccessStrategy,
+    JwtRefreshStrategy,
+    PasswordService,
+  ],
 })
 export class AuthModule {}
