@@ -1,9 +1,16 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { User } from '@prisma/client';
 
 const SERVICE = {
-  login: jest.fn().mockResolvedValue({ accessToken: 'abc123' }),
+  login: jest
+    .fn()
+    .mockResolvedValue({ accessToken: 'abc123', refreshToken: 'abc123' }),
+  logout: jest.fn(),
+  refresh: jest
+    .fn()
+    .mockResolvedValue({ accessToken: 'xyz123', refreshToken: 'xyz123' }),
 };
 
 describe('AuthController', () => {
@@ -13,7 +20,7 @@ describe('AuthController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
-      providers: [AuthService, { provide: AuthService, useValue: SERVICE }],
+      providers: [{ provide: AuthService, useValue: SERVICE }],
     }).compile();
 
     controller = module.get<AuthController>(AuthController);
@@ -27,12 +34,36 @@ describe('AuthController', () => {
   describe('POST /auth/login login()', () => {
     const payload = { email: 'test@test.com', password: 'trustno1' };
 
-    it('should return accessToken', async () => {
-      const createdSpy = jest.spyOn(service, 'login');
-      const createdUser = await controller.login(payload);
+    it('should return accessToken accessToken + refreshToken', async () => {
+      const loginSpy = jest.spyOn(service, 'login');
+      const loginResponse = await controller.login(payload);
 
-      expect(createdSpy).toBeCalledWith(payload.email, payload.password);
-      expect(createdUser).toEqual({ accessToken: 'abc123' });
+      expect(loginSpy).toBeCalledWith(payload.email, payload.password);
+      expect(loginResponse).toEqual({
+        accessToken: 'abc123',
+        refreshToken: 'abc123',
+      });
+    });
+  });
+
+  describe('GET /auth/logout logout()', () => {
+    it('should logout user', async () => {
+      const logoutSpy = jest.spyOn(service, 'logout');
+
+      await controller.logout({} as User);
+
+      expect(logoutSpy).toBeCalledTimes(1);
+    });
+  });
+
+  describe('GET /auth/refresh refresh()', () => {
+    it('should refresh refreshToken', async () => {
+      const refreshSpy = jest.spyOn(service, 'refresh');
+
+      const tokens = await controller.refresh({} as User);
+
+      expect(refreshSpy).toBeCalledTimes(1);
+      expect(tokens).toEqual({ accessToken: 'xyz123', refreshToken: 'xyz123' });
     });
   });
 });

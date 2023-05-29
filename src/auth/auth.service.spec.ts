@@ -19,6 +19,8 @@ const DB = {
     findUnique: jest
       .fn()
       .mockResolvedValue({ ...ONE_USER, password: PASSWORD, id: '1' }),
+
+    update: jest.fn().mockResolvedValue(ONE_USER),
   },
 };
 
