@@ -5,7 +5,7 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { UsersModule } from '../users/users.module';
-import { JwtStrategy } from './strategy/jwt.strategy';
+import { JwtAccessStrategy } from './strategies/jwt-access.strategy';
 import { PasswordService } from './password.service';
 
 const JWTAuthModule = JwtModule.register({
@@ -18,6 +18,6 @@ const JWTAuthModule = JwtModule.register({
 @Module({
   imports: [PrismaModule, PassportModule, JWTAuthModule, UsersModule],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, PasswordService],
+  providers: [AuthService, JwtAccessStrategy, PasswordService],
 })
 export class AuthModule {}
