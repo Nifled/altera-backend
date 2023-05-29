@@ -32,11 +32,54 @@ export class AuthService {
       throw new BadRequestException('Invalid password.');
     }
 
+    const refreshToken = this.generateRefreshToken(user.id);
+    this.updateRefreshTokenForUser(user.id, refreshToken);
+
     return {
-      accessToken: this.jwtService.sign(
-        { userId: user.id },
-        { secret: process.env.JWT_ACCESS_TOKEN_SECRET },
-      ),
+      accessToken: this.generateAccessToken(user.id),
+      refreshToken,
     };
+  }
+
+  async logout(userId: string) {
+    await this.updateRefreshTokenForUser(userId, null);
+  }
+
+  async refresh(userId: string): Promise<AuthEntity> {
+    const newRefreshToken = this.generateRefreshToken(userId);
+
+    await this.updateRefreshTokenForUser(userId, newRefreshToken);
+
+    return {
+      accessToken: this.generateAccessToken(userId),
+      refreshToken: newRefreshToken,
+    };
+  }
+
+  /**
+   * Updates the refreshToken for the given user in the database
+   */
+  async updateRefreshTokenForUser(userId: string, refreshToken: string | null) {
+    return await this.prisma.user.update({
+      where: { id: userId },
+      data: { refreshToken },
+    });
+  }
+
+  generateAccessToken(userId: string) {
+    return this.jwtService.sign(
+      { userId },
+      { secret: process.env.JWT_ACCESS_TOKEN_SECRET },
+    );
+  }
+
+  generateRefreshToken(userId: string) {
+    return this.jwtService.sign(
+      { userId },
+      {
+        secret: process.env.JWT_REFRESH_TOKEN_SECRET,
+        expiresIn: '7d', // 1 week expiry for refresh tokens
+      },
+    );
   }
 }
