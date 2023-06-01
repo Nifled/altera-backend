@@ -3,6 +3,10 @@ import { Expose, Transform } from 'class-transformer';
 import { IsNumber, IsOptional, Min } from 'class-validator';
 import { ParsedOrderByField } from './pagination.types';
 
+// TODO: move these to config or some shit?
+const DEFAULT_PAGE_SIZE = 10;
+const DEFAULT_PAGE_OFFSET = 0;
+
 export class PaginationParamsDto {
   @Expose()
   @IsOptional()
@@ -10,7 +14,7 @@ export class PaginationParamsDto {
   @Transform(({ value }) => value && Number(value))
   @IsNumber()
   @Min(1)
-  limit?: number;
+  limit: number = DEFAULT_PAGE_SIZE;
 
   @Expose()
   @IsOptional()
@@ -18,7 +22,7 @@ export class PaginationParamsDto {
   @Transform(({ value }) => value && Number(value))
   @IsNumber()
   @Min(0)
-  offset?: number; // aka `skip`
+  offset: number = DEFAULT_PAGE_OFFSET; // aka `skip`
 
   @Expose()
   @IsOptional()
