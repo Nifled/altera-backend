@@ -12,9 +12,17 @@ import {
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
-import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { PostEntity } from './entities/post.entity';
 import { PayloadExistsPipe } from '../common/pipes/payload-exists.pipe';
+import { PaginationParamsDto } from '../common/pagination/pagination-params.dto';
+import { GetPagination } from '../common/pagination/get-pagination.decorator';
+import { PostOrderByDto } from './dto/post-order-by.dto';
 
 @Controller('posts')
 @ApiTags('posts')
@@ -29,9 +37,13 @@ export class PostsController {
   }
 
   @Get()
+  @ApiQuery({ type: PaginationParamsDto, required: false })
   @ApiOkResponse({ type: PostEntity, isArray: true })
-  findAll() {
-    return this.postsService.findAll();
+  async findAll(
+    @GetPagination({ orderByDto: PostOrderByDto })
+    { limit, offset, orderBy }: PaginationParamsDto,
+  ) {
+    return this.postsService.findAll({ limit, offset, orderBy });
   }
 
   @Get(':id')

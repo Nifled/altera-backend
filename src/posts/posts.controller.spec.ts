@@ -3,6 +3,7 @@ import { PostsController } from './posts.controller';
 import { PostsService } from './posts.service';
 import { Post } from '@prisma/client';
 import { UpdatePostDto } from './dto/update-post.dto';
+import { PaginationParamsDto } from '../common/pagination/pagination-params.dto';
 
 const POSTS_ARRAY: Partial<Post>[] = [
   { caption: 'This is a cool post #1', authorId: 'denzel' },
@@ -54,7 +55,7 @@ describe('PostsController', () => {
   describe('GET /posts findAll()', () => {
     it('should return an array of posts', async () => {
       const findAllSpy = jest.spyOn(service, 'findAll');
-      const posts = await controller.findAll();
+      const posts = await controller.findAll({} as PaginationParamsDto);
 
       expect(findAllSpy).toBeCalledTimes(1);
       expect(posts).toEqual(POSTS_ARRAY);

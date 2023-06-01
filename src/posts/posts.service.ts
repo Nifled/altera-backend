@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PrismaService } from '../prisma/prisma.service';
+import { PaginationParamsDto } from '../common/pagination/pagination-params.dto';
 
 @Injectable()
 export class PostsService {
@@ -13,8 +14,12 @@ export class PostsService {
     });
   }
 
-  findAll() {
-    return this.prisma.post.findMany();
+  findAll({ limit, offset, orderBy }: PaginationParamsDto) {
+    return this.prisma.post.findMany({
+      take: limit,
+      skip: offset,
+      orderBy,
+    });
   }
 
   findOne(id: string) {
