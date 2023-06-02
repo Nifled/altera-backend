@@ -23,6 +23,8 @@ import { PayloadExistsPipe } from '../common/pipes/payload-exists.pipe';
 import { PaginationParamsDto } from '../common/pagination/pagination-params.dto';
 import { GetPagination } from '../common/pagination/get-pagination.decorator';
 import { PostOrderByDto } from './dto/post-order-by.dto';
+import { PaginationMetaEntity } from '../common/pagination/entities/pagination-meta.entity';
+import { PaginationPageEntity } from '../common/pagination/entities/pagination-page.entity';
 
 @Controller('posts')
 @ApiTags('posts')
@@ -43,7 +45,22 @@ export class PostsController {
     @GetPagination({ orderByDto: PostOrderByDto })
     { limit, offset, orderBy }: PaginationParamsDto,
   ) {
-    return this.postsService.findAll({ limit, offset, orderBy });
+    const { count, posts } = await this.postsService.findAll({
+      limit,
+      offset,
+      orderBy,
+    });
+    const meta = new PaginationMetaEntity({
+      count,
+      // startCursor: offset ? posts[offset - 1].id : null,
+      // endCursor: offset ? posts[offset - 1].id : null,
+    });
+    const paginatedResponse = new PaginationPageEntity<PostEntity>({
+      data: posts.map((p) => new PostEntity(p)),
+      meta,
+    });
+
+    return paginatedResponse;
   }
 
   @Get(':id')

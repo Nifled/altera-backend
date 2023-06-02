@@ -14,12 +14,17 @@ export class PostsService {
     });
   }
 
-  findAll({ limit, offset, orderBy }: PaginationParamsDto) {
-    return this.prisma.post.findMany({
-      take: limit,
-      skip: offset,
-      orderBy,
-    });
+  async findAll({ limit, offset, orderBy }: PaginationParamsDto) {
+    const [count, posts] = await this.prisma.$transaction([
+      this.prisma.post.count(),
+      this.prisma.post.findMany({
+        take: limit,
+        skip: offset,
+        orderBy,
+      }),
+    ]);
+
+    return { count, posts };
   }
 
   findOne(id: string) {
