@@ -14,17 +14,15 @@ export class PostsService {
     });
   }
 
-  async findAll({ limit, offset, orderBy }: PaginationParamsDto) {
-    const [count, posts] = await this.prisma.$transaction([
-      this.prisma.post.count(),
-      this.prisma.post.findMany({
-        take: limit,
-        skip: offset,
-        orderBy,
-      }),
-    ]);
-
-    return { count, posts };
+  async findAll({ limit, cursor, orderBy }: PaginationParamsDto) {
+    return this.prisma.post.findMany({
+      take: limit,
+      // Skip 1 to not include the first item (`next_cursor` req query param)
+      // https://www.prisma.io/docs/concepts/components/prisma-client/pagination#do-i-always-have-to-skip-1
+      skip: 1,
+      orderBy,
+      cursor: cursor ? { id: cursor } : undefined,
+    });
   }
 
   findOne(id: string) {

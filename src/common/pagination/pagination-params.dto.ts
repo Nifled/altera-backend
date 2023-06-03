@@ -1,11 +1,10 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { Expose, Transform, Type } from 'class-transformer';
+import { Expose, Type } from 'class-transformer';
 import { IsNumber, IsOptional, Min } from 'class-validator';
 import { ParsedOrderByField } from './pagination.types';
 
 // TODO: move these to config or some shit?
 const DEFAULT_PAGE_SIZE = 10;
-const DEFAULT_PAGE_OFFSET = 0;
 
 export class PaginationParamsDto {
   @Expose()
@@ -18,11 +17,10 @@ export class PaginationParamsDto {
 
   @Expose()
   @IsOptional()
-  @ApiPropertyOptional({ minimum: 0 })
-  @Type(() => Number)
-  @IsNumber()
-  @Min(0)
-  offset: number = DEFAULT_PAGE_OFFSET; // aka `skip`
+  @ApiPropertyOptional()
+  // The response returns the cursor (`next_cursor`) as part
+  // of the payload to be sent in a subsequent request
+  cursor?: string;
 
   @Expose()
   @IsOptional()

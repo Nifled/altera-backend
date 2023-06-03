@@ -1,24 +1,16 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Expose } from 'class-transformer';
 
-interface PaginationMeta {
-  count: number; // Total number of items for query
+interface PaginationResponseMetadata {
+  nextCursor: string | null; // Next cursor id for subsequent requests
 }
 
-export class PaginationMetaEntity implements PaginationMeta {
+export class PaginationMetaEntity implements PaginationResponseMetadata {
   constructor(partial: Partial<PaginationMetaEntity>) {
     Object.assign(this, partial);
   }
 
-  @ApiProperty({ nullable: true })
-  startCursor?: string;
-
-  @ApiProperty({ nullable: true })
-  endCursor?: string;
-
-  @ApiProperty()
-  count: number;
-
-  // TODO: ?
-  // @ApiProperty()
-  // totalPages = this.count/this.pageSize;
+  @Expose({ name: 'next_cursor' }) // TODO: do we want this?
+  @ApiProperty({ nullable: true, type: String })
+  nextCursor: string | null;
 }

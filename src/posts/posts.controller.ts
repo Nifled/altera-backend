@@ -43,21 +43,20 @@ export class PostsController {
   @ApiOkResponse({ type: PostEntity, isArray: true })
   async findAll(
     @GetPagination({ orderByDto: PostOrderByDto })
-    { limit, offset, orderBy }: PaginationParamsDto,
+    { limit, orderBy, cursor }: PaginationParamsDto,
   ) {
-    const { count, posts } = await this.postsService.findAll({
+    const posts = await this.postsService.findAll({
       limit,
-      offset,
+      cursor,
       orderBy,
     });
-    const meta = new PaginationMetaEntity({
-      count,
-      // startCursor: offset ? posts[offset - 1].id : null,
-      // endCursor: offset ? posts[offset - 1].id : null,
+
+    const paginationMeta = new PaginationMetaEntity({
+      nextCursor: posts[posts.length - 1].id,
     });
     const paginatedResponse = new PaginationPageEntity<PostEntity>({
       data: posts.map((p) => new PostEntity(p)),
-      meta,
+      meta: paginationMeta,
     });
 
     return paginatedResponse;

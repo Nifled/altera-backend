@@ -11,7 +11,7 @@ type GetPaginationFuncParams = {
 };
 
 /**
- * @description Parses and validates request query Pagination params like `limit`, `offset` and `orderBy`.
+ * @description Parses and validates request query Pagination params like `limit`, `cursor` and `orderBy`.
  * @param orderByDto Dto to validate the orderBy fields. Passing in a valid DTO (e.g. `PostOrderByDto`) will validate the fields and filter out any unwanted ones.
  * @returns PaginationParamsDto
  * @example @GetPagination({ orderByDto: PostOrderByDto })
@@ -57,7 +57,7 @@ export const GetPagination = createParamDecorator(
     }
 
     const objectToValidate = {
-      ...request.query, // might include `limit`, `offset`, etc
+      ...request.query, // might include `limit`, `cursor`, etc
       orderBy: parsedOrderByFields,
     };
 
