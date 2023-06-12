@@ -18,6 +18,7 @@ import {
   ApiBearerAuth,
   ApiCreatedResponse,
   ApiOkResponse,
+  ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
 import { UserEntity } from './entities/user.entity';
@@ -26,6 +27,9 @@ import { PayloadExistsPipe } from '../common/pipes/payload-exists.pipe';
 import { GetPagination } from '../common/pagination/get-pagination.decorator';
 import { PaginationParamsDto } from '../common/pagination/pagination-params.dto';
 import { UsersQueryDto } from './dto/users-query.dto';
+import { UsersOrderByDto } from './dto/users-order-by.dto';
+import { PaginationMetaEntity } from '../common/pagination/entities/pagination-meta.entity';
+import { PaginationPageEntity } from '../common/pagination/entities/pagination-page.entity';
 
 @Controller('users')
 @ApiTags('users')
@@ -42,9 +46,11 @@ export class UsersController {
   @Get()
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
+  @ApiQuery({ type: PaginationParamsDto, required: false })
   @ApiOkResponse({ type: UserEntity, isArray: true })
   async findAll(
-    @GetPagination() { limit, cursor, orderBy }: PaginationParamsDto,
+    @GetPagination({ orderByDto: UsersOrderByDto })
+    { limit, cursor, orderBy }: PaginationParamsDto,
     @Query() query: UsersQueryDto,
   ) {
     const users = await this.usersService.findAll({
@@ -53,7 +59,16 @@ export class UsersController {
       orderBy,
       ...query,
     });
-    return users.map((user) => new UserEntity(user));
+
+    const paginationMeta = new PaginationMetaEntity({
+      nextCursor: users[users.length - 1].id,
+    });
+    const paginatedResponse = new PaginationPageEntity<UserEntity>({
+      data: users.map((user) => new UserEntity(user)),
+      meta: paginationMeta,
+    });
+
+    return paginatedResponse;
   }
 
   @Get(':id')
