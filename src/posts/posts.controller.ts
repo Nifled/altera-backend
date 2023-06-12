@@ -22,7 +22,7 @@ import { PostEntity } from './entities/post.entity';
 import { PayloadExistsPipe } from '../common/pipes/payload-exists.pipe';
 import { PaginationParamsDto } from '../common/pagination/pagination-params.dto';
 import { GetPagination } from '../common/pagination/get-pagination.decorator';
-import { PostOrderByDto } from './dto/post-order-by.dto';
+import { PostsOrderByDto } from './dto/posts-order-by.dto';
 import { PaginationMetaEntity } from '../common/pagination/entities/pagination-meta.entity';
 import { PaginationPageEntity } from '../common/pagination/entities/pagination-page.entity';
 
@@ -42,7 +42,7 @@ export class PostsController {
   @ApiQuery({ type: PaginationParamsDto, required: false })
   @ApiOkResponse({ type: PostEntity, isArray: true })
   async findAll(
-    @GetPagination({ orderByDto: PostOrderByDto })
+    @GetPagination({ orderByDto: PostsOrderByDto })
     { limit, orderBy, cursor }: PaginationParamsDto,
   ) {
     const posts = await this.postsService.findAll({

@@ -7,7 +7,7 @@ import { OrderByBaseFields } from '../../common/order-by/order-by.interface';
  * @description Defines the properties that can be made sortable for Post and the validations they must satisfy.
  * @example { "createdAt": "DESC", "updatedAt": "ASC" }
  */
-export class PostOrderByDto implements OrderByBaseFields {
+export class PostsOrderByDto implements OrderByBaseFields {
   @Expose()
   @IsOptional()
   @IsEnum(OrderByDirection)
