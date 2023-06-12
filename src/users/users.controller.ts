@@ -61,7 +61,7 @@ export class UsersController {
     });
 
     const paginationMeta = new PaginationMetaEntity({
-      nextCursor: users[users.length - 1].id,
+      nextCursor: users[users.length - 1].id || null,
     });
     const paginatedResponse = new PaginationPageEntity<UserEntity>({
       data: users.map((user) => new UserEntity(user)),

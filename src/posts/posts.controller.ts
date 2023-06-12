@@ -52,7 +52,7 @@ export class PostsController {
     });
 
     const paginationMeta = new PaginationMetaEntity({
-      nextCursor: posts[posts.length - 1].id,
+      nextCursor: posts[posts.length - 1].id || null,
     });
     const paginatedResponse = new PaginationPageEntity<PostEntity>({
       data: posts.map((p) => new PostEntity(p)),

@@ -10,7 +10,7 @@ export class PaginationMetaEntity implements PaginationResponseMetadata {
     Object.assign(this, partial);
   }
 
-  @Expose({ name: 'next_cursor' }) // TODO: do we want this?
+  @Expose({ name: 'next_cursor' })
   @ApiProperty({ nullable: true, type: String })
   nextCursor: string | null;
 }

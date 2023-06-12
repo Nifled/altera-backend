@@ -6,8 +6,8 @@ import { UpdatePostDto } from './dto/update-post.dto';
 import { PaginationParamsDto } from '../common/pagination/pagination-params.dto';
 
 const POSTS_ARRAY: Partial<Post>[] = [
-  { caption: 'This is a cool post #1', authorId: 'denzel' },
-  { caption: 'This is an alright post #2', authorId: 'denzel' },
+  { id: '1', caption: 'This is a cool post #1', authorId: 'denzel' },
+  { id: '2', caption: 'This is a post #2', authorId: 'denzel' },
 ];
 const ONE_POST = POSTS_ARRAY[0];
 
@@ -58,7 +58,7 @@ describe('PostsController', () => {
       const posts = await controller.findAll({} as PaginationParamsDto);
 
       expect(findAllSpy).toBeCalledTimes(1);
-      expect(posts).toEqual(POSTS_ARRAY);
+      expect(posts.data).toEqual(POSTS_ARRAY);
     });
   });
 
