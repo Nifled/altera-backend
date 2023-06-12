@@ -19,7 +19,7 @@ export class PostsService {
       take: limit,
       // Skip 1 to not include the first item (`next_cursor` req query param)
       // https://www.prisma.io/docs/concepts/components/prisma-client/pagination#do-i-always-have-to-skip-1
-      skip: 1,
+      skip: cursor ? 1 : undefined,
       orderBy,
       cursor: cursor ? { id: cursor } : undefined,
     });

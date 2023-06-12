@@ -3,6 +3,8 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { PasswordService } from '../auth/password.service';
+import { PaginationParamsDto } from '../common/pagination/pagination-params.dto';
+import { UsersQueryDto } from './dto/users-query.dto';
 
 @Injectable()
 export class UsersService {
@@ -20,8 +22,27 @@ export class UsersService {
     return this.prisma.user.create({ data: createUserDto });
   }
 
-  findAll() {
-    return this.prisma.user.findMany();
+  findAll({
+    limit,
+    cursor,
+    orderBy,
+    email,
+    firstName,
+    lastName,
+  }: PaginationParamsDto & UsersQueryDto) {
+    return this.prisma.user.findMany({
+      take: limit,
+      // Skip 1 to not include the first item (`next_cursor` req query param)
+      // https://www.prisma.io/docs/concepts/components/prisma-client/pagination#do-i-always-have-to-skip-1
+      skip: cursor ? 1 : undefined,
+      orderBy,
+      cursor: cursor ? { id: cursor } : undefined,
+      where: {
+        ...(email ? { email: { contains: email } } : {}),
+        ...(firstName ? { firstName: { contains: firstName } } : {}),
+        ...(lastName ? { lastName: { contains: lastName } } : {}),
+      },
+    });
   }
 
   findOne(id: string) {

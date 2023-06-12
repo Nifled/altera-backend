@@ -9,6 +9,7 @@ import {
   NotFoundException,
   UseGuards,
   UsePipes,
+  Query,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -22,6 +23,9 @@ import {
 import { UserEntity } from './entities/user.entity';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { PayloadExistsPipe } from '../common/pipes/payload-exists.pipe';
+import { GetPagination } from '../common/pagination/get-pagination.decorator';
+import { PaginationParamsDto } from '../common/pagination/pagination-params.dto';
+import { UsersQueryDto } from './dto/users-query.dto';
 
 @Controller('users')
 @ApiTags('users')
@@ -39,8 +43,16 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOkResponse({ type: UserEntity, isArray: true })
-  async findAll() {
-    const users = await this.usersService.findAll();
+  async findAll(
+    @GetPagination() { limit, cursor, orderBy }: PaginationParamsDto,
+    @Query() query: UsersQueryDto,
+  ) {
+    const users = await this.usersService.findAll({
+      limit,
+      cursor,
+      orderBy,
+      ...query,
+    });
     return users.map((user) => new UserEntity(user));
   }
 
