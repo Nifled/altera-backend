@@ -103,14 +103,17 @@ describe('PostsController (e2e)', () => {
 
   describe('/users (GET)', () => {
     it('returns a list of users', async () => {
-      const { status, body } = await request(httpServer)
+      const {
+        status,
+        body: { data },
+      } = await request(httpServer)
         .get('/users')
         .set('Authorization', `Bearer ${bearerToken}`);
 
       expect(status).toBe(200);
-      expect(body).toStrictEqual(expect.arrayContaining([userShape]));
-      expect(body.length).toBeGreaterThanOrEqual(1);
-      expect(body.some((x: any) => x.id === user.id)).toBeTruthy();
+      expect(data).toStrictEqual(expect.arrayContaining([userShape]));
+      expect(data.length).toBeGreaterThanOrEqual(1);
+      expect(data.some((x: any) => x.id === user.id)).toBeTruthy();
     });
 
     it('fails if a bearer token is not provided', async () => {
@@ -119,7 +122,19 @@ describe('PostsController (e2e)', () => {
       expect(status).toBe(401);
     });
 
-    // TODO: test with filters and pagination
+    it('returns a filtered result given a firstName query param', async () => {
+      const {
+        status,
+        body: { data },
+      } = await request(httpServer)
+        .get('/users')
+        .set('Authorization', `Bearer ${bearerToken}`)
+        .query({ email: 'userForUsers' });
+
+      expect(status).toBe(200);
+      expect(data[0].email).toBe(user.email);
+      expect(data[0].email).toContain('userForUsers');
+    });
   });
 
   describe('/users/:id (GET)', () => {
