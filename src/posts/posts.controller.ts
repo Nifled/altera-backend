@@ -25,6 +25,7 @@ import { GetPagination } from '../common/pagination/get-pagination.decorator';
 import { PostsOrderByDto } from './dto/posts-order-by.dto';
 import { PaginationMetaEntity } from '../common/pagination/entities/pagination-meta.entity';
 import { PaginationPageEntity } from '../common/pagination/entities/pagination-page.entity';
+import { ApiOkResponsePaginated } from '../common/pagination/api-ok-response-paginated.decorator';
 
 @Controller('posts')
 @ApiTags('posts')
@@ -40,7 +41,7 @@ export class PostsController {
 
   @Get()
   @ApiQuery({ type: PaginationParamsDto, required: false })
-  @ApiOkResponse({ type: PostEntity, isArray: true })
+  @ApiOkResponsePaginated(PostEntity)
   async findAll(
     @GetPagination({ orderByDto: PostsOrderByDto })
     { limit, orderBy, cursor }: PaginationParamsDto,

@@ -11,6 +11,6 @@ export class PaginationMetaEntity implements PaginationResponseMetadata {
   }
 
   @Expose({ name: 'next_cursor' })
-  @ApiProperty({ nullable: true, type: String })
+  @ApiProperty({ nullable: true, type: String, name: 'next_cursor' })
   nextCursor: string | null;
 }

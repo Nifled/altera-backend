@@ -30,6 +30,7 @@ import { UsersQueryDto } from './dto/users-query.dto';
 import { UsersOrderByDto } from './dto/users-order-by.dto';
 import { PaginationMetaEntity } from '../common/pagination/entities/pagination-meta.entity';
 import { PaginationPageEntity } from '../common/pagination/entities/pagination-page.entity';
+import { ApiOkResponsePaginated } from '../common/pagination/api-ok-response-paginated.decorator';
 
 @Controller('users')
 @ApiTags('users')
@@ -47,7 +48,7 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiQuery({ type: PaginationParamsDto, required: false })
-  @ApiOkResponse({ type: UserEntity, isArray: true })
+  @ApiOkResponsePaginated(UserEntity)
   async findAll(
     @GetPagination({ orderByDto: UsersOrderByDto })
     { limit, cursor, orderBy }: PaginationParamsDto,
