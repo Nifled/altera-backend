@@ -6,6 +6,7 @@ import {
   ClassSerializerInterceptor,
   Logger,
   ValidationPipe,
+  VersioningType,
 } from '@nestjs/common';
 import { useContainer } from 'class-validator';
 import { PrismaClientExceptionFilter } from './prisma/filters/prisma-client-exception/prisma-client-exception.filter';
@@ -22,6 +23,9 @@ async function bootstrap() {
   app.useGlobalFilters(new PrismaClientExceptionFilter(httpAdapter));
   // Enable Dependency Injection for class-validator
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
+  app.enableVersioning({
+    type: VersioningType.URI, // URI versioning (eg '/api/v1')
+  });
 
   const packageJson = readFileSync('./package.json', 'utf-8');
   const { version }: { version: string } = JSON.parse(packageJson);

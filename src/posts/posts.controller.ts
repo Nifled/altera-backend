@@ -27,7 +27,7 @@ import { PaginationMetaEntity } from '../common/pagination/entities/pagination-m
 import { PaginationPageEntity } from '../common/pagination/entities/pagination-page.entity';
 import { ApiOkResponsePaginated } from '../common/pagination/api-ok-response-paginated.decorator';
 
-@Controller('posts')
+@Controller({ path: 'posts', version: '1' })
 @ApiTags('posts')
 export class PostsController {
   constructor(private readonly postsService: PostsService) {}

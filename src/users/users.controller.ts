@@ -32,7 +32,7 @@ import { PaginationMetaEntity } from '../common/pagination/entities/pagination-m
 import { PaginationPageEntity } from '../common/pagination/entities/pagination-page.entity';
 import { ApiOkResponsePaginated } from '../common/pagination/api-ok-response-paginated.decorator';
 
-@Controller('users')
+@Controller({ path: 'users', version: '1' })
 @ApiTags('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}

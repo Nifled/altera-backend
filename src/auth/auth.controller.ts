@@ -8,7 +8,7 @@ import { JwtRefreshGuard } from './jwt-refresh.guard';
 import { AuthenticatedUser } from './decorators/authenticated-user.decorator';
 import { User } from '@prisma/client';
 
-@Controller('auth')
+@Controller({ path: 'auth', version: '1' })
 @ApiTags('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
