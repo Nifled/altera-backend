@@ -22,7 +22,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { UserEntity } from './entities/user.entity';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PayloadExistsPipe } from '../common/pipes/payload-exists.pipe';
 import { GetPagination } from '../common/pagination/get-pagination.decorator';
 import { PaginationParamsDto } from '../common/pagination/pagination-params.dto';
