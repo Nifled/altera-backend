@@ -37,19 +37,10 @@ export class AuthService {
     return this.generateTokensForUser(user.id);
   }
 
-  // TODO: TEST ALL THIS SHIT NEW BRO
-
   async loginWithGoogle(oAuthLoginDto: OAuthLoginDto): Promise<AuthEntity> {
     const existingUser = await this.prisma.user.findUnique({
       where: { email: oAuthLoginDto.email },
     });
-
-    // Check if its an actual provider (google) user by checking providerToken
-    if (existingUser?.providerToken !== oAuthLoginDto.providerToken) {
-      throw new BadRequestException(
-        'There is already a user registered with this email.',
-      );
-    }
 
     if (!existingUser) {
       const provider = await this.getIdentityProviderByName(
@@ -68,6 +59,16 @@ export class AuthService {
       });
 
       return this.generateTokensForUser(newUser.id);
+    }
+
+    // Check if existing user is an external user (google, etc)
+    if (
+      !existingUser.providerId ||
+      existingUser.providerToken !== oAuthLoginDto.providerToken
+    ) {
+      throw new BadRequestException(
+        'There is already a user registered with this email.',
+      );
     }
 
     return this.generateTokensForUser(existingUser.id);

@@ -2,9 +2,13 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { User } from '@prisma/client';
+import { OAuthLoginDto } from './dto/oauth-login.dto';
 
 const SERVICE = {
   login: jest
+    .fn()
+    .mockResolvedValue({ accessToken: 'abc123', refreshToken: 'abc123' }),
+  loginWithGoogle: jest
     .fn()
     .mockResolvedValue({ accessToken: 'abc123', refreshToken: 'abc123' }),
   logout: jest.fn(),
@@ -64,6 +68,17 @@ describe('AuthController', () => {
 
       expect(refreshSpy).toBeCalledTimes(1);
       expect(tokens).toEqual({ accessToken: 'xyz123', refreshToken: 'xyz123' });
+    });
+  });
+
+  describe('GET /auth/google/callback loginWithGoogle()', () => {
+    it('should log in google user and return tokens', async () => {
+      const googleSpy = jest.spyOn(service, 'loginWithGoogle');
+
+      const tokens = await controller.googleAuthCallback({} as OAuthLoginDto);
+
+      expect(googleSpy).toBeCalledTimes(1);
+      expect(tokens).toEqual({ accessToken: 'abc123', refreshToken: 'abc123' });
     });
   });
 });
