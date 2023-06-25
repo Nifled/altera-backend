@@ -7,6 +7,8 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
 import { AuthenticatedUser } from './decorators/authenticated-user.decorator';
 import { User } from '@prisma/client';
+import { GoogleOAuthGuard } from './guards/google-oauth.guard';
+import { OAuthLoginDto } from './dto/oauth-login.dto';
 
 @Controller({ path: 'auth', version: '1' })
 @ApiTags('auth')
@@ -36,5 +38,16 @@ export class AuthController {
     const { id } = user;
 
     return this.authService.refresh(id);
+  }
+
+  @Get('google')
+  @UseGuards(GoogleOAuthGuard)
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  async googleOAuth() {}
+
+  @Get('google/callback')
+  @UseGuards(GoogleOAuthGuard)
+  async googleAuthCallback(@AuthenticatedUser() googleUser: OAuthLoginDto) {
+    return await this.authService.loginWithGoogle(googleUser);
   }
 }

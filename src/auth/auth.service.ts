@@ -7,6 +7,7 @@ import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthEntity } from './entities/auth.entity';
 import { PasswordService } from './password.service';
+import { OAuthLoginDto } from './dto/oauth-login.dto';
 
 @Injectable()
 export class AuthService {
@@ -25,20 +26,51 @@ export class AuthService {
 
     const isPasswordValid = await this.passwordService.validatePassword(
       password,
-      user.password,
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      user.password!,
     );
 
     if (!isPasswordValid) {
       throw new BadRequestException('Invalid password.');
     }
 
-    const refreshToken = this.generateRefreshToken(user.id);
-    await this.updateRefreshTokenForUser(user.id, refreshToken);
+    return this.generateTokensForUser(user.id);
+  }
 
-    return {
-      accessToken: this.generateAccessToken(user.id),
-      refreshToken,
-    };
+  // TODO: TEST ALL THIS SHIT NEW BRO
+
+  async loginWithGoogle(oAuthLoginDto: OAuthLoginDto): Promise<AuthEntity> {
+    const existingUser = await this.prisma.user.findUnique({
+      where: { email: oAuthLoginDto.email },
+    });
+
+    // Check if its an actual provider (google) user by checking providerToken
+    if (existingUser?.providerToken !== oAuthLoginDto.providerToken) {
+      throw new BadRequestException(
+        'There is already a user registered with this email.',
+      );
+    }
+
+    if (!existingUser) {
+      const provider = await this.getIdentityProviderByName(
+        oAuthLoginDto.providerName,
+      );
+
+      const newUser = await this.prisma.user.create({
+        data: {
+          firstName: oAuthLoginDto.firstName,
+          lastName: oAuthLoginDto.lastName,
+          email: oAuthLoginDto.email,
+          providerToken: oAuthLoginDto.providerToken,
+          providerId: provider.id,
+          // Note: these users have no passwords
+        },
+      });
+
+      return this.generateTokensForUser(newUser.id);
+    }
+
+    return this.generateTokensForUser(existingUser.id);
   }
 
   async logout(userId: string) {
@@ -46,14 +78,7 @@ export class AuthService {
   }
 
   async refresh(userId: string): Promise<AuthEntity> {
-    const newRefreshToken = this.generateRefreshToken(userId);
-
-    await this.updateRefreshTokenForUser(userId, newRefreshToken);
-
-    return {
-      accessToken: this.generateAccessToken(userId),
-      refreshToken: newRefreshToken,
-    };
+    return this.generateTokensForUser(userId);
   }
 
   /**
@@ -64,6 +89,19 @@ export class AuthService {
       where: { id: userId },
       data: { refreshToken },
     });
+  }
+
+  /**
+   * Generates both access/refresh tokens and returns them
+   * @param userId string
+   * @returns AuthEntity
+   */
+  private async generateTokensForUser(userId: string): Promise<AuthEntity> {
+    const accessToken = this.generateAccessToken(userId);
+    const refreshToken = this.generateRefreshToken(userId);
+    await this.updateRefreshTokenForUser(userId, refreshToken);
+
+    return new AuthEntity({ accessToken, refreshToken });
   }
 
   generateAccessToken(userId: string) {
@@ -81,5 +119,15 @@ export class AuthService {
         expiresIn: '7d', // 1 week expiry for refresh tokens
       },
     );
+  }
+
+  async getIdentityProviderByName(providerName: string) {
+    return await this.prisma.userIdentityProvider.upsert({
+      where: { name: providerName },
+      create: { name: providerName },
+      // If the update property is empty, the record will not be updated.
+      // thus, this functions as a findOrCreate-like operation
+      update: {},
+    });
   }
 }
