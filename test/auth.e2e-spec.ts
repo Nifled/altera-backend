@@ -5,6 +5,7 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import * as request from 'supertest';
+import * as nock from 'nock';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { useContainer } from 'class-validator';
@@ -97,6 +98,59 @@ describe('PostsController (e2e)', () => {
         .send({ email: user.email, password: 'wrongPassword' });
 
       expect(status).toBe(400);
+    });
+  });
+
+  describe('/auth/google (GET)', () => {
+    it('should return a redirect to /auth/google/callback', async () => {
+      const { status, body, headers } = await request(httpServer).get(
+        '/auth/google',
+      );
+
+      expect(status).toBe(302);
+      expect(body).toBeEmpty();
+      expect(
+        headers.location.includes('accounts.google.com/o/oauth2/v2/auth'),
+      ).toBeTrue();
+    });
+  });
+
+  describe('/auth/google/callback (GET)', () => {
+    // Google tokenURL
+    nock('https://www.googleapis.com')
+      .post('/oauth2/v4/token')
+      .query(true)
+      .reply(200, {
+        access_token: 'mockAccessToken',
+      });
+
+    // Google userProfileURL
+    nock('https://www.googleapis.com')
+      .get('/oauth2/v3/userinfo')
+      .query(true)
+      .reply(200, {
+        id: '12345', // user google id
+        given_name: 'Denzel',
+        family_name: 'Curry',
+        emails: [{ value: 'test@example.com' }],
+      });
+
+    it('should log in a google user given the correct data', async () => {
+      const { status, body } = await request(httpServer)
+        .get('/auth/google/callback')
+        .query({ code: 'mockAuthCode' });
+
+      expect(status).toBe(200);
+      expect(body).toStrictEqual(authLoginShape);
+
+      const session: any = jwt.decode(body.accessToken);
+      const foundUser = await prisma.user.findUnique({
+        where: { id: session.userId },
+      });
+
+      expect(foundUser).toBeDefined();
+      expect(foundUser?.email).toBe('test@example.com');
+      expect(foundUser?.refreshToken).toBe(body.refreshToken);
     });
   });
 

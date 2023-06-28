@@ -1,3 +1,4 @@
+import { Expose } from 'class-transformer';
 import {
   IsEmail,
   IsIn,
@@ -7,24 +8,29 @@ import {
 } from 'class-validator';
 
 export class OAuthLoginDto {
-  @IsString({})
+  @Expose()
+  @IsString()
   @IsIn(['google'])
   @IsNotEmpty()
   providerName: string;
 
+  @Expose()
   @IsString()
   @IsNotEmpty()
   providerToken: string;
 
+  @Expose()
   @IsString()
   @IsEmail()
   @IsNotEmpty()
   email: string;
 
+  @Expose()
   @IsOptional()
   @IsString()
   firstName?: string;
 
+  @Expose()
   @IsOptional()
   @IsString()
   lastName?: string;
