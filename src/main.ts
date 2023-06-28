@@ -11,8 +11,6 @@ import {
 import { useContainer } from 'class-validator';
 import { PrismaClientExceptionFilter } from './prisma/filters/prisma-client-exception/prisma-client-exception.filter';
 
-const APP_PORT = 3000;
-
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { abortOnError: false });
   const { httpAdapter } = app.get(HttpAdapterHost);
@@ -36,8 +34,9 @@ async function bootstrap() {
   // Set up Swagger
   loadSwagger();
 
-  await app.listen(APP_PORT);
-  Logger.verbose(`App is now running on port=${APP_PORT}`);
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  await app.listen(process.env.PORT!);
+  Logger.verbose(`App is now running on port=${process.env.PORT}`);
   Logger.verbose('APP VERSION', version);
 
   function checkForDatabaseUrl() {
