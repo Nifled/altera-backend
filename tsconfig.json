@@ -18,7 +18,10 @@
     "noFallthroughCasesInSwitch": true
   },
   // compatible jest-extended typings
-  "files": ["node_modules/jest-extended/types/index.d.ts"],
+  "files": [
+    "node_modules/jest-extended/types/index.d.ts",
+    "node_modules/@types/multer/index.d.ts"
+  ],
   "include": ["src/**/*", "test/**/*", "prisma/**/*"],
   "exclude": ["node_modules"]
 }
