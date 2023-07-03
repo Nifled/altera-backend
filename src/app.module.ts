@@ -10,11 +10,13 @@ import { UsersModule } from './users/users.module';
 import { APP_GUARD } from '@nestjs/core';
 import { HttpLoggerMiddleware } from './common/logger/http-logger.middleware';
 import { StorageModule } from './storage/storage.module';
+import config from './config/index.config';
 
 @Module({
   imports: [
     // Load env vars
     ConfigModule.forRoot({
+      load: [config],
       isGlobal: true,
     }),
     ThrottlerModule.forRoot({
