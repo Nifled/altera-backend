@@ -5,6 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PaginationParamsDto } from '../common/pagination/pagination-params.dto';
+import { ConfigService } from '@nestjs/config';
 
 const POSTS_ARRAY: Partial<Post>[] = [
   { caption: 'This is a cool post #1', authorId: 'denzel' },
@@ -28,7 +29,11 @@ describe('PostsService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [PostsService, { provide: PrismaService, useValue: DB }],
+      providers: [
+        PostsService,
+        ConfigService,
+        { provide: PrismaService, useValue: DB },
+      ],
     }).compile();
 
     service = module.get<PostsService>(PostsService);

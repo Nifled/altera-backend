@@ -1,5 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { StorageService } from './storage.service';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import config from '../config/index.config';
 
 const mockS3Instance = {
   send: jest.fn().mockReturnValue({ $metadata: { httpStatusCode: 200 } }),
@@ -18,6 +20,7 @@ describe('StorageService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [ConfigModule.forRoot({ load: [config] })],
       providers: [StorageService],
     }).compile();
 

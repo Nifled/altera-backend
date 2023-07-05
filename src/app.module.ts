@@ -10,6 +10,7 @@ import { UsersModule } from './users/users.module';
 import { APP_GUARD } from '@nestjs/core';
 import { HttpLoggerMiddleware } from './common/logger/http-logger.middleware';
 import { StorageModule } from './storage/storage.module';
+import { validateEnvVars } from './config/env.validation';
 import config from './config/index.config';
 
 @Module({
@@ -18,9 +19,9 @@ import config from './config/index.config';
     ConfigModule.forRoot({
       load: [config],
       isGlobal: true,
+      validate: validateEnvVars,
     }),
     ThrottlerModule.forRootAsync({
-      imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: async (config: ConfigService) => ({
         ttl: config.get<number>('rateLimit.duration'),

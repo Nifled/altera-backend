@@ -23,7 +23,7 @@ export interface GoogleProfile {
 
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
-  constructor(private config: ConfigService) {
+  constructor(config: ConfigService) {
     super({
       clientID: config.get<string>('google.clientId'),
       clientSecret: config.get<string>('google.clientSecret'),

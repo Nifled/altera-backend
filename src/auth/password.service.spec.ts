@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PasswordService } from './password.service';
 import * as bcrypt from 'bcrypt';
+import { ConfigService } from '@nestjs/config';
 
 const PASSWORD = 'trustno1';
 
@@ -9,7 +10,7 @@ describe('PasswordService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [PasswordService],
+      providers: [PasswordService, ConfigService],
     }).compile();
 
     service = module.get<PasswordService>(PasswordService);

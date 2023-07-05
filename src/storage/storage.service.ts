@@ -18,8 +18,8 @@ export class StorageService implements StorageProvider {
   private bucket: string;
   private logger = new Logger(StorageService.name);
 
-  constructor(private config: ConfigService) {
-    this.createProviderInstance();
+  constructor(config: ConfigService) {
+    this.createProviderInstance(config);
   }
 
   /**
@@ -52,11 +52,11 @@ export class StorageService implements StorageProvider {
     }
   }
 
-  private createProviderInstance() {
-    const bucket = this.config.get<string>('s3.bucket');
-    const region = this.config.get<string>('s3.region');
-    const accessKeyId = this.config.get<string>('s3.accessKeyId');
-    const secretAccessKey = this.config.get<string>('s3.secretAccessKey');
+  private createProviderInstance(config: ConfigService) {
+    const bucket = config.get<string>('s3.bucket');
+    const region = config.get<string>('s3.region');
+    const accessKeyId = config.get<string>('s3.accessKeyId');
+    const secretAccessKey = config.get<string>('s3.secretAccessKey');
 
     if (!bucket || !region || !accessKeyId || !secretAccessKey) {
       throw new BadRequestException(

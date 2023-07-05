@@ -14,10 +14,7 @@ export class JwtRefreshStrategy extends PassportStrategy(
   Strategy,
   'jwt-refresh-token',
 ) {
-  constructor(
-    private config: ConfigService,
-    private usersService: UsersService,
-  ) {
+  constructor(private usersService: UsersService, config: ConfigService) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         (request: Request) => {
