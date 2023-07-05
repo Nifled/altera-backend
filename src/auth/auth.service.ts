@@ -8,10 +8,12 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AuthEntity } from './entities/auth.entity';
 import { PasswordService } from './password.service';
 import { OAuthLoginDto } from './dto/oauth-login.dto';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
   constructor(
+    private config: ConfigService,
     private prisma: PrismaService,
     private jwtService: JwtService,
     private passwordService: PasswordService,
@@ -108,7 +110,10 @@ export class AuthService {
   generateAccessToken(userId: string) {
     return this.jwtService.sign(
       { userId },
-      { secret: process.env.JWT_ACCESS_TOKEN_SECRET },
+      {
+        secret: this.config.get<string>('jwt.access.secret'),
+        expiresIn: this.config.get<string>('jwt.access.expiresIn'),
+      },
     );
   }
 
@@ -116,8 +121,8 @@ export class AuthService {
     return this.jwtService.sign(
       { userId },
       {
-        secret: process.env.JWT_REFRESH_TOKEN_SECRET,
-        expiresIn: '7d', // 1 week expiry for refresh tokens
+        secret: this.config.get<string>('jwt.refresh.secret'),
+        expiresIn: this.config.get<string>('jwt.refresh.expiresIn'),
       },
     );
   }

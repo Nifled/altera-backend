@@ -9,12 +9,16 @@ import { JwtAccessStrategy } from './strategies/jwt-access.strategy';
 import { PasswordService } from './password.service';
 import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
 import { GoogleStrategy } from './strategies/google.strategy';
+import { ConfigService } from '@nestjs/config';
 
-const JWTAuthModule = JwtModule.register({
-  secret: process.env.JWT_ACCESS_TOKEN_SECRET,
-  signOptions: {
-    expiresIn: '5m',
-  },
+const JWTAuthModule = JwtModule.registerAsync({
+  useFactory: (config: ConfigService) => ({
+    secret: config.get<string>('jwt.access.secret'),
+    signOptions: {
+      expiresIn: config.get<string>('jwt.access.expiresIn'),
+    },
+  }),
+  inject: [ConfigService],
 });
 
 @Module({

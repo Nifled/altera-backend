@@ -6,6 +6,7 @@ import { JwtService } from '@nestjs/jwt';
 import { LoginDto } from './dto/login.dto';
 import { PasswordService } from './password.service';
 import { OAuthLoginDto } from './dto/oauth-login.dto';
+import { ConfigService } from '@nestjs/config';
 
 const ONE_USER: Partial<User> = {
   firstName: 'Denzel',
@@ -50,6 +51,7 @@ describe('AuthService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
+        ConfigService,
         { provide: JwtService, useValue: JWT_SERVICE },
         { provide: PasswordService, useValue: PASSWORD_SERVICE },
         { provide: PrismaService, useValue: DB },

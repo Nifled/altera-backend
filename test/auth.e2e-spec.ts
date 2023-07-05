@@ -15,12 +15,14 @@ import { CreateUserDto } from '../src/users/dto/create-user.dto';
 import { User } from '@prisma/client';
 import { UsersService } from '../src/users/users.service';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 
 describe('PostsController (e2e)', () => {
   let app: INestApplication;
   let prisma: PrismaService;
   let jwt: JwtService;
   let httpServer: NestApplication;
+  let config: ConfigService;
 
   let user: User;
   let bearerToken: string;
@@ -38,6 +40,7 @@ describe('PostsController (e2e)', () => {
     app = moduleFixture.createNestApplication();
     prisma = app.get<PrismaService>(PrismaService);
     jwt = app.get<JwtService>(JwtService);
+    config = app.get<ConfigService>(ConfigService);
     const usersService = app.get<UsersService>(UsersService);
 
     const { httpAdapter } = app.get(HttpAdapterHost);
@@ -63,7 +66,7 @@ describe('PostsController (e2e)', () => {
     // Generate a jwt to be used for protected routes
     bearerToken = jwt.sign(
       { userId: user.id },
-      { secret: process.env.JWT_ACCESS_TOKEN_SECRET },
+      { secret: config.get<string>('jwt.access.secret') },
     );
   });
 
