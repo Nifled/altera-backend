@@ -13,6 +13,8 @@ import { PrismaClientExceptionFilter } from '../src/prisma/filters/prisma-client
 import { CreatePostDto } from '../src/posts/dto/create-post.dto';
 import { CreateUserDto } from '../src/users/dto/create-user.dto';
 import { Post, User } from '@prisma/client';
+import { ConfigModule } from '@nestjs/config';
+import config from '../src/config/index.config';
 
 describe('PostsController (e2e)', () => {
   let app: INestApplication;
@@ -32,7 +34,7 @@ describe('PostsController (e2e)', () => {
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
+      imports: [AppModule, ConfigModule.forRoot({ load: [config] })],
     }).compile();
 
     app = moduleFixture.createNestApplication();
