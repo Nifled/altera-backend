@@ -13,7 +13,7 @@ export default () => ({
       expiresIn: '7d',
     },
   },
-  bcryptSaltRounds: Number(process.env.BCRYPT_SALT_OR_ROUNDS),
+  bcryptSaltOrRounds: process.env.BCRYPT_SALT_OR_ROUNDS,
   rateLimit: {
     max: Number(process.env.THROTTLER_REQ_LIMIT),
     duration: Number(process.env.THROTTLER_TTL_SECS),

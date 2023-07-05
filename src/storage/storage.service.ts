@@ -5,6 +5,7 @@ import {
   PutObjectCommandInput,
   S3Client,
 } from '@aws-sdk/client-s3';
+import { ConfigService } from '@nestjs/config';
 
 interface StorageProvider {
   uploadFile: (file: Express.Multer.File, key: string) => Promise<string>;
@@ -17,7 +18,7 @@ export class StorageService implements StorageProvider {
   private bucket: string;
   private logger = new Logger(StorageService.name);
 
-  constructor() {
+  constructor(private config: ConfigService) {
     this.createProviderInstance();
   }
 
@@ -52,20 +53,23 @@ export class StorageService implements StorageProvider {
   }
 
   private createProviderInstance() {
-    // TODO: Fix this messy ass shit
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    this.bucket = process.env.AWS_S3_BUCKET!;
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    this.region = process.env.AWS_S3_REGION!;
+    const bucket = this.config.get<string>('s3.bucket');
+    const region = this.config.get<string>('s3.region');
+    const accessKeyId = this.config.get<string>('s3.accessKeyId');
+    const secretAccessKey = this.config.get<string>('s3.secretAccessKey');
+
+    if (!bucket || !region || !accessKeyId || !secretAccessKey) {
+      throw new BadRequestException(
+        'Bad config/credentials for storage provider.',
+      );
+    }
+
+    this.bucket = bucket;
+    this.region = region;
 
     this.client = new S3Client({
       region: this.region,
-      credentials: {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        accessKeyId: process.env.AWS_S3_ACCESS_KEY_ID!,
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        secretAccessKey: process.env.AWS_S3_SECRET_ACCESS_KEY!,
-      },
+      credentials: { accessKeyId, secretAccessKey },
     });
 
     return this.client;

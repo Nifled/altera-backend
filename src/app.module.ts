@@ -3,7 +3,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { PostsModule } from './posts/posts.module';
 import { UsersModule } from './users/users.module';
@@ -19,9 +19,13 @@ import config from './config/index.config';
       load: [config],
       isGlobal: true,
     }),
-    ThrottlerModule.forRoot({
-      ttl: Number(process.env.THROTTLER_TTL_SECS),
-      limit: Number(process.env.THROTTLER_REQ_LIMIT),
+    ThrottlerModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: async (config: ConfigService) => ({
+        ttl: config.get<number>('rateLimit.duration'),
+        limit: config.get<number>('rateLimit.max'),
+      }),
     }),
     PrismaModule,
     AuthModule,
