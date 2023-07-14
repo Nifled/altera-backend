@@ -5,6 +5,8 @@ import { User } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PasswordService } from '../auth/password.service';
+import { PaginationParamsDto } from '../common/pagination/pagination-params.dto';
+import { ConfigService } from '@nestjs/config';
 
 const USERS_ARRAY: Partial<User>[] = [
   { firstName: 'Denzel', lastName: 'Curry', email: 'denzel@ult.com' },
@@ -31,6 +33,7 @@ describe('UsersService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UsersService,
+        ConfigService,
         PasswordService,
         { provide: PrismaService, useValue: DB },
       ],
@@ -63,7 +66,7 @@ describe('UsersService', () => {
 
   describe('findAll()', () => {
     it('should return an array of users', async () => {
-      const users = await service.findAll();
+      const users = await service.findAll({} as PaginationParamsDto);
       expect(users).toEqual(USERS_ARRAY);
     });
   });

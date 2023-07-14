@@ -12,11 +12,22 @@ import {
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
-import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { PostEntity } from './entities/post.entity';
 import { PayloadExistsPipe } from '../common/pipes/payload-exists.pipe';
+import { PaginationParamsDto } from '../common/pagination/pagination-params.dto';
+import { GetPagination } from '../common/pagination/get-pagination.decorator';
+import { PostsOrderByDto } from './dto/posts-order-by.dto';
+import { PaginationMetaEntity } from '../common/pagination/entities/pagination-meta.entity';
+import { PaginationPageEntity } from '../common/pagination/entities/pagination-page.entity';
+import { ApiOkResponsePaginated } from '../common/pagination/api-ok-response-paginated.decorator';
 
-@Controller('posts')
+@Controller({ path: 'posts', version: '1' })
 @ApiTags('posts')
 export class PostsController {
   constructor(private readonly postsService: PostsService) {}
@@ -29,9 +40,27 @@ export class PostsController {
   }
 
   @Get()
-  @ApiOkResponse({ type: PostEntity, isArray: true })
-  findAll() {
-    return this.postsService.findAll();
+  @ApiQuery({ type: PaginationParamsDto, required: false })
+  @ApiOkResponsePaginated(PostEntity)
+  async findAll(
+    @GetPagination({ orderByDto: PostsOrderByDto })
+    { limit, orderBy, cursor }: PaginationParamsDto,
+  ) {
+    const posts = await this.postsService.findAll({
+      limit,
+      cursor,
+      orderBy,
+    });
+
+    const paginationMeta = new PaginationMetaEntity({
+      nextCursor: posts[posts.length - 1].id || null,
+    });
+    const paginatedResponse = new PaginationPageEntity<PostEntity>({
+      data: posts.map((p) => new PostEntity(p)),
+      meta: paginationMeta,
+    });
+
+    return paginatedResponse;
   }
 
   @Get(':id')
