@@ -13,6 +13,8 @@ import { PrismaClientExceptionFilter } from '../src/prisma/filters/prisma-client
 import { CreatePostDto } from '../src/posts/dto/create-post.dto';
 import { CreateUserDto } from '../src/users/dto/create-user.dto';
 import { Post, User } from '@prisma/client';
+import { ConfigModule } from '@nestjs/config';
+import config from '../src/config/index.config';
 
 describe('PostsController (e2e)', () => {
   let app: INestApplication;
@@ -32,7 +34,7 @@ describe('PostsController (e2e)', () => {
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
+      imports: [AppModule, ConfigModule.forRoot({ load: [config] })],
     }).compile();
 
     app = moduleFixture.createNestApplication();
@@ -85,16 +87,68 @@ describe('PostsController (e2e)', () => {
 
   describe('/posts (GET)', () => {
     it('returns a list of posts', async () => {
-      const { status, body } = await request(httpServer).get('/posts');
+      const {
+        status,
+        body: { data },
+      } = await request(httpServer).get('/posts');
 
       expect(status).toBe(200);
-      expect(body).toStrictEqual(expect.arrayContaining([postShape]));
-      expect(body.length).toBe(4);
-      expect(body[0].id).toBe(post.id);
-      expect(new Date(body[0].createdAt)).toEqual(post.createdAt);
+      expect(data).toStrictEqual(expect.arrayContaining([postShape]));
+      expect(data.length).toBe(4);
+      expect(data[0].id).toBe(post.id);
+      expect(new Date(data[0].createdAt)).toEqual(post.createdAt);
     });
 
-    // TODO: test with filters and pagination
+    it('returns a paginated list of posts with cursor', async () => {
+      const {
+        status,
+        body: { data, meta },
+      } = await request(httpServer).get('/posts').query({ limit: '3' });
+
+      expect(status).toBe(200);
+      expect(data.length).toBe(3);
+      expect(meta.next_cursor).toBe(data[data.length - 1].id);
+    });
+
+    it('returns a list of posts ordered by caption (asc)', async () => {
+      const expectedPosts = await prisma.post.findMany({
+        orderBy: { caption: 'asc' },
+        take: 3,
+      });
+
+      const {
+        status,
+        body: { data },
+      } = await request(httpServer).get('/posts').query({
+        limit: '3',
+        orderBy: 'caption',
+      });
+
+      expect(status).toBe(200);
+      expect(data[0].caption).toStrictEqual(expectedPosts[0].caption);
+      expect(data[1].caption).toStrictEqual(expectedPosts[1].caption);
+      expect(data[2].caption).toStrictEqual(expectedPosts[2].caption);
+    });
+
+    it('returns a list of posts ordered by caption (desc)', async () => {
+      const expectedPosts = await prisma.post.findMany({
+        orderBy: { caption: 'desc' },
+        take: 3,
+      });
+
+      const {
+        status,
+        body: { data },
+      } = await request(httpServer).get('/posts').query({
+        limit: '3',
+        orderBy: '-caption',
+      });
+
+      expect(status).toBe(200);
+      expect(data[0].caption).toStrictEqual(expectedPosts[0].caption);
+      expect(data[1].caption).toStrictEqual(expectedPosts[1].caption);
+      expect(data[2].caption).toStrictEqual(expectedPosts[2].caption);
+    });
   });
 
   describe('/posts/:id (GET)', () => {

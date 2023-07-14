@@ -28,5 +28,14 @@ export class UserEntity implements User {
   email: string;
 
   @Exclude()
-  password: string;
+  password: string | null;
+
+  @Exclude()
+  providerId: string | null;
+
+  @Exclude()
+  providerToken: string | null;
+
+  @Exclude()
+  refreshToken: string | null;
 }

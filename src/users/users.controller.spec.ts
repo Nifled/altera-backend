@@ -4,10 +4,21 @@ import { UsersService } from './users.service';
 import { User } from '@prisma/client';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { PaginationParamsDto } from '../common/pagination/pagination-params.dto';
 
 const USERS_ARRAY: Partial<User>[] = [
-  { firstName: 'Denzel', lastName: 'Curry', email: 'denzel@ult.com' },
-  { firstName: 'Donald', lastName: 'Glover', email: 'childish@gambino.com' },
+  {
+    id: '1',
+    firstName: 'Denzel',
+    lastName: 'Curry',
+    email: 'denzel@ult.com',
+  },
+  {
+    id: '2',
+    firstName: 'Donald',
+    lastName: 'Glover',
+    email: 'childish@gambino.com',
+  },
 ];
 const ONE_USER = USERS_ARRAY[0];
 
@@ -52,10 +63,10 @@ describe('UsersController', () => {
   describe('GET /users findAll()', () => {
     it('should return an array of users', async () => {
       const findAllSpy = jest.spyOn(service, 'findAll');
-      const users = await controller.findAll();
+      const users = await controller.findAll({} as PaginationParamsDto, {});
 
       expect(findAllSpy).toBeCalledTimes(1);
-      expect(users).toEqual(USERS_ARRAY);
+      expect(users.data).toEqual(USERS_ARRAY);
     });
   });
 

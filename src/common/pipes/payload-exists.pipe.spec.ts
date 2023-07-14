@@ -5,7 +5,7 @@ describe('PayloadExistsPipe', () => {
   const pipe = new PayloadExistsPipe();
 
   it('should be defined', () => {
-    expect(new PayloadExistsPipe()).toBeDefined();
+    expect(pipe).toBeDefined();
   });
 
   it('should throw an exception if payload is empty', () => {

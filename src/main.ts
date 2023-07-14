@@ -6,11 +6,10 @@ import {
   ClassSerializerInterceptor,
   Logger,
   ValidationPipe,
+  VersioningType,
 } from '@nestjs/common';
 import { useContainer } from 'class-validator';
 import { PrismaClientExceptionFilter } from './prisma/filters/prisma-client-exception/prisma-client-exception.filter';
-
-const APP_PORT = 3000;
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { abortOnError: false });
@@ -22,27 +21,20 @@ async function bootstrap() {
   app.useGlobalFilters(new PrismaClientExceptionFilter(httpAdapter));
   // Enable Dependency Injection for class-validator
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
+  app.enableVersioning({
+    type: VersioningType.URI, // URI versioning (eg '/api/v1')
+  });
 
   const packageJson = readFileSync('./package.json', 'utf-8');
   const { version }: { version: string } = JSON.parse(packageJson);
 
-  // Throw error if env vars aren't set up
-  checkForDatabaseUrl();
-
   // Set up Swagger
   loadSwagger();
 
-  await app.listen(APP_PORT);
-  Logger.verbose(`App is now running on port=${APP_PORT}`);
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  await app.listen(process.env.PORT!);
+  Logger.verbose(`App is now running on port=${process.env.PORT}`);
   Logger.verbose('APP VERSION', version);
-
-  function checkForDatabaseUrl() {
-    const databaseUrl = process.env.DATABASE_URL;
-
-    if (!databaseUrl) {
-      throw new Error(`Environment variables are missing.`);
-    }
-  }
 
   function loadSwagger() {
     const config = new DocumentBuilder()

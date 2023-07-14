@@ -3,10 +3,11 @@ import { PostsController } from './posts.controller';
 import { PostsService } from './posts.service';
 import { Post } from '@prisma/client';
 import { UpdatePostDto } from './dto/update-post.dto';
+import { PaginationParamsDto } from '../common/pagination/pagination-params.dto';
 
 const POSTS_ARRAY: Partial<Post>[] = [
-  { caption: 'This is a cool post #1', authorId: 'denzel' },
-  { caption: 'This is an alright post #2', authorId: 'denzel' },
+  { id: '1', caption: 'This is a cool post #1', authorId: 'denzel' },
+  { id: '2', caption: 'This is a post #2', authorId: 'denzel' },
 ];
 const ONE_POST = POSTS_ARRAY[0];
 
@@ -54,10 +55,10 @@ describe('PostsController', () => {
   describe('GET /posts findAll()', () => {
     it('should return an array of posts', async () => {
       const findAllSpy = jest.spyOn(service, 'findAll');
-      const posts = await controller.findAll();
+      const posts = await controller.findAll({} as PaginationParamsDto);
 
       expect(findAllSpy).toBeCalledTimes(1);
-      expect(posts).toEqual(POSTS_ARRAY);
+      expect(posts.data).toEqual(POSTS_ARRAY);
     });
   });
 

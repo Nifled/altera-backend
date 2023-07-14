@@ -9,6 +9,7 @@ import {
   NotFoundException,
   UseGuards,
   UsePipes,
+  Query,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -17,13 +18,21 @@ import {
   ApiBearerAuth,
   ApiCreatedResponse,
   ApiOkResponse,
+  ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
 import { UserEntity } from './entities/user.entity';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PayloadExistsPipe } from '../common/pipes/payload-exists.pipe';
+import { GetPagination } from '../common/pagination/get-pagination.decorator';
+import { PaginationParamsDto } from '../common/pagination/pagination-params.dto';
+import { UsersQueryDto } from './dto/users-query.dto';
+import { UsersOrderByDto } from './dto/users-order-by.dto';
+import { PaginationMetaEntity } from '../common/pagination/entities/pagination-meta.entity';
+import { PaginationPageEntity } from '../common/pagination/entities/pagination-page.entity';
+import { ApiOkResponsePaginated } from '../common/pagination/api-ok-response-paginated.decorator';
 
-@Controller('users')
+@Controller({ path: 'users', version: '1' })
 @ApiTags('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -38,10 +47,29 @@ export class UsersController {
   @Get()
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOkResponse({ type: UserEntity, isArray: true })
-  async findAll() {
-    const users = await this.usersService.findAll();
-    return users.map((user) => new UserEntity(user));
+  @ApiQuery({ type: PaginationParamsDto, required: false })
+  @ApiOkResponsePaginated(UserEntity)
+  async findAll(
+    @GetPagination({ orderByDto: UsersOrderByDto })
+    { limit, cursor, orderBy }: PaginationParamsDto,
+    @Query() query: UsersQueryDto,
+  ) {
+    const users = await this.usersService.findAll({
+      limit,
+      cursor,
+      orderBy,
+      ...query,
+    });
+
+    const paginationMeta = new PaginationMetaEntity({
+      nextCursor: users[users.length - 1].id || null,
+    });
+    const paginatedResponse = new PaginationPageEntity<UserEntity>({
+      data: users.map((user) => new UserEntity(user)),
+      meta: paginationMeta,
+    });
+
+    return paginatedResponse;
   }
 
   @Get(':id')
