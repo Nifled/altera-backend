@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { JsonWebTokenError } from 'jsonwebtoken';
 import { AuthService } from './auth.service';
 import { User } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
@@ -7,6 +8,7 @@ import { LoginDto } from './dto/login.dto';
 import { PasswordService } from './password.service';
 import { OAuthLoginDto } from './dto/oauth-login.dto';
 import { ConfigService } from '@nestjs/config';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 const ONE_USER: Partial<User> = {
   firstName: 'Denzel',
@@ -39,6 +41,8 @@ const PASSWORD_SERVICE = {
 
 const JWT_SERVICE = {
   sign: jest.fn().mockResolvedValue('abc123'),
+  verify: jest.fn().mockReturnValue('abc123'),
+  decode: jest.fn().mockReturnValue({ userId: '1' }),
 };
 
 describe('AuthService', () => {
@@ -110,6 +114,43 @@ describe('AuthService', () => {
     });
   });
 
+  describe('forgotPassword()', () => {
+    it('should successfully create a reset token', async () => {
+      const findSpy = jest.spyOn(prisma.user, 'findUnique');
+      const jwtSpy = jest.spyOn(jwtService, 'sign');
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      await service.forgotPassword(ONE_USER.email!);
+
+      expect(findSpy).toBeCalledWith({ where: { email: ONE_USER.email } });
+      expect(jwtSpy).toBeCalledWith({ userId: '1' }, { expiresIn: '30m' });
+    });
+  });
+
+  describe('resetPassword()', () => {
+    const resetPasswordDto = {
+      token: 'randomToken',
+      newPassword: 'trustno1',
+    } as ResetPasswordDto;
+
+    it('should successfully reset user password', async () => {
+      const findSpy = jest.spyOn(prisma.user, 'findUnique');
+      const updateSpy = jest.spyOn(prisma.user, 'update');
+      const jwtVerifySpy = jest.spyOn(jwtService, 'verify');
+      const jwtDecodeSpy = jest.spyOn(jwtService, 'decode');
+      const passwordSpy = jest.spyOn(passwordService, 'hashPassword');
+      await service.resetPassword(resetPasswordDto);
+
+      expect(jwtVerifySpy).toBeCalledWith(resetPasswordDto.token);
+      expect(jwtDecodeSpy).toBeCalledWith(resetPasswordDto.token);
+      expect(findSpy).toBeCalledWith({ where: { id: '1' } });
+      expect(passwordSpy).toBeCalledWith(resetPasswordDto.newPassword);
+      expect(updateSpy).toBeCalledWith({
+        where: { id: '1' },
+        data: { password: resetPasswordDto.newPassword },
+      });
+    });
+  });
+
   describe('logout()', () => {
     it('should successfully log user out', async () => {
       const updateSpy = jest.spyOn(prisma.user, 'update');
@@ -156,6 +197,27 @@ describe('AuthService', () => {
 
       expect(upsertSpy).toBeCalledTimes(1);
       expect(provider.name).toBe('google');
+    });
+  });
+
+  describe('isJwtExpired()', () => {
+    it('should return false if jwt is NOT expired', async () => {
+      const jwtSpy = jest.spyOn(jwtService, 'verify');
+      const isTokenExpired = await service.isJwtExpired('abc123');
+
+      expect(jwtSpy).toBeCalledTimes(1);
+      expect(isTokenExpired).toBe(false);
+    });
+
+    it('should return true if jwt is expired', async () => {
+      const jwtSpy = jest.spyOn(jwtService, 'verify').mockImplementation(() => {
+        throw new JsonWebTokenError('Expired');
+      });
+
+      const isTokenExpired = await service.isJwtExpired('expiredToken123');
+
+      expect(jwtSpy).toBeCalledTimes(1);
+      expect(isTokenExpired).toBe(true);
     });
   });
 });

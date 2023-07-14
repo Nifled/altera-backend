@@ -210,4 +210,47 @@ describe('PostsController (e2e)', () => {
       expect(status).toBe(400);
     });
   });
+
+  describe('auth/reset-password (POST)', () => {
+    it('should successfully reset user password', async () => {
+      const resetToken = jwt.sign({ userId: user.id }, { expiresIn: '30m' });
+
+      const { status, body } = await request(httpServer)
+        .post('/auth/reset-password')
+        .send({ token: resetToken, newPassword: 'trustEvery1' });
+
+      expect(status).toBe(201);
+      expect(body).toBeEmpty();
+
+      // Try logging back in with the new password
+      const loginResponse = await request(httpServer)
+        .post('/auth/login')
+        .send({ email: user.email, password: 'trustEvery1' });
+
+      expect(loginResponse.status).toBe(201);
+    });
+
+    it('should return 400 if token is expired', async () => {
+      const expiredToken = jwt.sign({ userId: user.id }, { expiresIn: '-1s' });
+
+      const { status } = await request(httpServer)
+        .post('/auth/reset-password')
+        .send({ token: expiredToken, newPassword: 'trustEvery1' });
+
+      expect(status).toBe(400);
+    });
+
+    it('should return 404 Not Found if user does not exist', async () => {
+      const resetToken = jwt.sign(
+        { userId: 'invalidUserId' }, // <-- user does not exist
+        { expiresIn: '30m' },
+      );
+
+      const { status } = await request(httpServer)
+        .post('/auth/reset-password')
+        .send({ token: resetToken, newPassword: 'trustEvery1' });
+
+      expect(status).toBe(404);
+    });
+  });
 });

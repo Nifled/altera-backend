@@ -81,7 +81,6 @@ export class AuthService {
     await this.updateRefreshTokenForUser(userId, null);
   }
 
-  // TODO: Test this
   async forgotPassword(email: string) {
     const user = await this.prisma.user.findUnique({
       where: { email },

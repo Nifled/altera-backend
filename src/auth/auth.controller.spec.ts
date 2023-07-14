@@ -3,6 +3,8 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { User } from '@prisma/client';
 import { OAuthLoginDto } from './dto/oauth-login.dto';
+import { ForgotPasswordDto } from './dto/forgot-passwords.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 const SERVICE = {
   login: jest
@@ -12,6 +14,8 @@ const SERVICE = {
     .fn()
     .mockResolvedValue({ accessToken: 'abc123', refreshToken: 'abc123' }),
   logout: jest.fn(),
+  forgotPassword: jest.fn(),
+  resetPassword: jest.fn(),
   refresh: jest
     .fn()
     .mockResolvedValue({ accessToken: 'xyz123', refreshToken: 'xyz123' }),
@@ -47,6 +51,31 @@ describe('AuthController', () => {
         accessToken: 'abc123',
         refreshToken: 'abc123',
       });
+    });
+  });
+
+  describe('POST /auth/forgot-password forgotPassword()', () => {
+    const payload = { email: 'test@test.com' } as ForgotPasswordDto;
+
+    it('should not throw any errors', async () => {
+      const forgotPasswordSpy = jest.spyOn(service, 'forgotPassword');
+      await controller.forgotPassword(payload);
+
+      expect(forgotPasswordSpy).toBeCalledTimes(1);
+    });
+  });
+
+  describe('POST /auth/reset-password resetPassword()', () => {
+    const payload = {
+      newPassword: 'trustno1',
+      token: 'abc123',
+    } as ResetPasswordDto;
+
+    it('should reset password', async () => {
+      const resetPasswordSpy = jest.spyOn(service, 'resetPassword');
+      await controller.resetPassword(payload);
+
+      expect(resetPasswordSpy).toBeCalledTimes(1);
     });
   });
 
