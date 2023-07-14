@@ -9,6 +9,8 @@ import { AuthenticatedUser } from './decorators/authenticated-user.decorator';
 import { User } from '@prisma/client';
 import { GoogleOAuthGuard } from './guards/google-oauth.guard';
 import { OAuthLoginDto } from './dto/oauth-login.dto';
+import { ForgotPasswordDto } from './dto/forgot-passwords.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Controller({ path: 'auth', version: '1' })
 @ApiTags('auth')
@@ -28,6 +30,16 @@ export class AuthController {
     const { id } = user;
 
     return this.authService.logout(id);
+  }
+
+  @Post('forgot-password')
+  async forgotPassword(@Body() { email }: ForgotPasswordDto) {
+    return this.authService.forgotPassword(email);
+  }
+
+  @Post('reset-password')
+  async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
+    return this.authService.resetPassword(resetPasswordDto);
   }
 
   @Post('refresh')

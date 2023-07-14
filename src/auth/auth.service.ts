@@ -9,6 +9,7 @@ import { AuthEntity } from './entities/auth.entity';
 import { PasswordService } from './password.service';
 import { OAuthLoginDto } from './dto/oauth-login.dto';
 import { ConfigService } from '@nestjs/config';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -80,12 +81,61 @@ export class AuthService {
     await this.updateRefreshTokenForUser(userId, null);
   }
 
+  // TODO: Test this
+  async forgotPassword(email: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User not found with email: ${email}.`);
+    }
+
+    const resetToken = this.jwtService.sign(
+      { userId: user.id },
+      { expiresIn: '30m' },
+    );
+    // TODO: Set up Mailing module to send an email with the reset token
+    // Reference: https://blog.iamstarcode.com/how-to-send-emails-using-nestjs-nodemailer-smtp-gmail-and-oauth2
+  }
+
+  async resetPassword({ newPassword, token }: ResetPasswordDto) {
+    const isTokenExpired = this.isJwtExpired(token);
+
+    if (isTokenExpired) {
+      throw new BadRequestException('Invalid token.');
+    }
+
+    const decodedToken = this.jwtService.decode(token) as {
+      [key: string]: any;
+    };
+    const userId = decodedToken.userId as string;
+
+    // Get user by userId (from jwt)
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User not found with id: ${userId}.`);
+    }
+
+    const newPasswordHash = await this.passwordService.hashPassword(
+      newPassword,
+    );
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { password: newPasswordHash },
+    });
+  }
+
   async refresh(userId: string): Promise<AuthEntity> {
     return this.generateTokensForUser(userId);
   }
 
   /**
-   * Updates the refreshToken for the given user in the database
+   * Updates the refreshToken in the database for the given user
    */
   async updateRefreshTokenForUser(userId: string, refreshToken: string | null) {
     return await this.prisma.user.update({
@@ -127,6 +177,11 @@ export class AuthService {
     );
   }
 
+  /**
+   * Providers are stored in a DB table, get the name from the DB
+   * @param providerName string
+   * @returns Provider name
+   */
   async getIdentityProviderByName(providerName: string) {
     return await this.prisma.userIdentityProvider.upsert({
       where: { name: providerName },
@@ -135,5 +190,14 @@ export class AuthService {
       // thus, this functions as a findOrCreate-like operation
       update: {},
     });
+  }
+
+  isJwtExpired(token: string) {
+    try {
+      this.jwtService.verify(token);
+      return false;
+    } catch (error) {
+      return true;
+    }
   }
 }
