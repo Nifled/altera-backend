@@ -41,8 +41,24 @@ model Post {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   caption   String?  @db.VarChar(255)
-  author    User?    @relation(fields: [authorId], references: [id])
+  author    User     @relation(fields: [authorId], references: [id])
   authorId  String
+  media     PostMedia[]
 
   @@index([authorId])
+}
+
+model PostMedia {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  post      Post     @relation(fields: [postId], references: [id])
+  postId    String
+  url       String   @db.VarChar(255)
+  // filter
+  // location (geopoint)
+  // effects
+  // order (in relation to a Post)
+
+  @@index([postId])
 }
