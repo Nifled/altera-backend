@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Post } from '@prisma/client';
+import { PostMediaEntity } from './post-media.entity';
+import { Type } from 'class-transformer';
 
 export class PostEntity implements Post {
   constructor(partial: Partial<PostEntity>) {
@@ -20,4 +22,8 @@ export class PostEntity implements Post {
 
   @ApiProperty()
   authorId: string;
+
+  @ApiProperty()
+  @Type(() => PostMediaEntity)
+  media: PostMediaEntity[];
 }
