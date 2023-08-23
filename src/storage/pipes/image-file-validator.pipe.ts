@@ -6,30 +6,38 @@ import { ValidationOptions, registerDecorator } from 'class-validator';
  *
  * @returns Checks if the file is an image and is less than 5MB.
  */
-export function IsValidImageFile(validationOptions?: ValidationOptions) {
+export function IsValidImageFileArray(validationOptions?: ValidationOptions) {
   return function (object: any, propertyName: string) {
     registerDecorator({
       target: object.constructor,
       propertyName: propertyName,
       options: validationOptions,
-      validator: ImageFileValidatorPipe,
+      validator: ImageFilesValidatorPipe,
     });
   };
 }
 
+/**
+ * @returns Throws a `BadRequestException` error if any file within the payload is not valid. Note: Only checks actual files, if there aren't any files in the payload, it'll pass
+ */
 @Injectable()
-export class ImageFileValidatorPipe implements PipeTransform {
+export class ImageFilesValidatorPipe implements PipeTransform {
   transform(payload: any) {
-    if (!this.isFileValid(payload)) {
-      throw new BadRequestException('Invalid file');
+    const files = payload as Express.Multer.File[];
+
+    if (files) {
+      // Check every file, exit early if something is not valid
+      files.forEach((file) => {
+        if (!this.isFileValidImage(file)) {
+          throw new BadRequestException('Invalid files');
+        }
+      });
     }
 
     return payload;
   }
 
-  isFileValid(payload: any) {
-    const file = payload as Express.Multer.File;
-
+  isFileValidImage(file: Express.Multer.File) {
     const validFileTypes = [
       'image/jpeg',
       'image/png',
@@ -50,7 +58,7 @@ export class ImageFileValidatorPipe implements PipeTransform {
     }
 
     if (file.size > maxFileSize) {
-      throw new BadRequestException('File size exceeds the 5MB limit.');
+      throw new BadRequestException("File's size exceeds the 5MB limit.");
     }
 
     return true;
