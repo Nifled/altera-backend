@@ -4,6 +4,9 @@ import {
   INestApplication,
   ValidationPipe,
 } from '@nestjs/common';
+import * as nock from 'nock';
+import * as path from 'path';
+import * as fs from 'fs';
 import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma/prisma.service';
@@ -13,12 +16,12 @@ import { PrismaClientExceptionFilter } from '../src/prisma/filters/prisma-client
 import { CreatePostDto } from '../src/posts/dto/create-post.dto';
 import { CreateUserDto } from '../src/users/dto/create-user.dto';
 import { Post, User } from '@prisma/client';
-import { ConfigModule } from '@nestjs/config';
-import config from '../src/config/index.config';
+import { ConfigService } from '@nestjs/config';
 
 describe('PostsController (e2e)', () => {
   let app: INestApplication;
   let prisma: PrismaService;
+  let config: ConfigService;
   let httpServer: NestApplication;
 
   let user: User;
@@ -34,11 +37,12 @@ describe('PostsController (e2e)', () => {
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule, ConfigModule.forRoot({ load: [config] })],
+      imports: [AppModule],
     }).compile();
 
     app = moduleFixture.createNestApplication();
     prisma = app.get<PrismaService>(PrismaService);
+    config = app.get<ConfigService>(ConfigService);
 
     const { httpAdapter } = app.get(HttpAdapterHost);
     app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
@@ -233,6 +237,63 @@ describe('PostsController (e2e)', () => {
       );
 
       expect(status).toBe(404);
+    });
+  });
+
+  describe('/posts/:id/upload-file (POST)', () => {
+    const imagePath = path.join(__dirname, 'data', 'test.png');
+    const imageBuffer = fs.readFileSync(imagePath);
+    let newPost: Post;
+
+    it('should create a post with a file', async () => {
+      // S3 client upload mock
+      const bucket = config.get<string>('s3.bucket');
+      const region = config.get<string>('s3.region');
+      nock(`https://${bucket}.s3.${region}.amazonaws.com`)
+        .filteringPath(() => '/posts')
+        .put(`/posts`)
+        .query(true)
+        .reply(200, {
+          $metadata: {
+            httpStatusCode: 200,
+          },
+        });
+
+      const { status, body } = await request(httpServer)
+        .post(`/posts`)
+        .field('caption', 'Post 1000')
+        .field('authorId', user.id)
+        .attach('file', imageBuffer, { filename: 'test.png' });
+
+      newPost = body; // Set up the post for the next test
+
+      expect(status).toBe(201);
+      expect(body.caption).toBe('Post 1000');
+    });
+
+    it('should upload files to S3 and save the urls to the post', async () => {
+      // S3 client upload mock
+      const bucket = config.get<string>('s3.bucket');
+      const region = config.get<string>('s3.region');
+      nock(`https://${bucket}.s3.${region}.amazonaws.com`)
+        .filteringPath(() => '/posts')
+        .put(`/posts`)
+        .query(true)
+        .reply(200, {
+          $metadata: {
+            httpStatusCode: 200,
+          },
+        });
+
+      const { status, body } = await request(httpServer)
+        .post(`/posts/${newPost.id}/upload-file`)
+        .field('caption', 'Post 4')
+        .field('authorId', user.id)
+        .attach('file', imageBuffer, { filename: 'test.png' });
+
+      expect(status).toBe(201);
+      expect(body.id).toBe(newPost.id);
+      expect(body.media.length).toBe(2); // one file should have been uploaded from previous create test
     });
   });
 });

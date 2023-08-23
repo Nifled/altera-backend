@@ -19,6 +19,17 @@ const SERVICE = {
   remove: jest.fn().mockResolvedValue(ONE_POST),
 };
 
+const POST_FILES = [
+  {
+    mimetype: 'image/jpeg',
+    buffer: Buffer.from('This is a test file'),
+  },
+  {
+    mimetype: 'image/png',
+    buffer: Buffer.from('This is a test file'),
+  },
+] as Express.Multer.File[];
+
 describe('PostsController', () => {
   let controller: PostsController;
   let service: PostsService;
@@ -45,7 +56,7 @@ describe('PostsController', () => {
 
     it('should successfully create a post', async () => {
       const createdSpy = jest.spyOn(service, 'create');
-      const createdPost = await controller.create(createPostDto);
+      const createdPost = await controller.create(POST_FILES, createPostDto);
 
       expect(createdSpy).toBeCalledTimes(1);
       expect(createdPost).toEqual(ONE_POST);

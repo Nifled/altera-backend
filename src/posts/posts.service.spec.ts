@@ -1,17 +1,29 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PostsService } from './posts.service';
-import { Post } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PaginationParamsDto } from '../common/pagination/pagination-params.dto';
 import { ConfigService } from '@nestjs/config';
+import { StorageService } from '../storage/storage.service';
+import { PostEntity } from './entities/post.entity';
 
-const POSTS_ARRAY: Partial<Post>[] = [
-  { caption: 'This is a cool post #1', authorId: 'denzel' },
-  { caption: 'This is an alright post #2', authorId: 'denzel' },
+const POSTS_ARRAY: Partial<PostEntity>[] = [
+  { caption: 'This is a cool post #1', authorId: 'denzel', media: [] },
+  { caption: 'This is an alright post #2', authorId: 'denzel', media: [] },
 ];
 const ONE_POST = POSTS_ARRAY[0];
+
+const POST_FILES = [
+  {
+    mimetype: 'image/jpeg',
+    buffer: Buffer.from('This is a test file'),
+  },
+  {
+    mimetype: 'image/png',
+    buffer: Buffer.from('This is a test file'),
+  },
+] as Express.Multer.File[];
 
 const DB = {
   post: {
@@ -21,6 +33,10 @@ const DB = {
     update: jest.fn().mockResolvedValue(ONE_POST),
     delete: jest.fn().mockResolvedValue(ONE_POST),
   },
+};
+
+const S3 = {
+  uploadFiles: jest.fn().mockResolvedValue([{ url: 'test' }]),
 };
 
 describe('PostsService', () => {
@@ -33,11 +49,16 @@ describe('PostsService', () => {
         PostsService,
         ConfigService,
         { provide: PrismaService, useValue: DB },
+        { provide: StorageService, useValue: S3 },
       ],
     }).compile();
 
     service = module.get<PostsService>(PostsService);
     prisma = module.get<PrismaService>(PrismaService);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
@@ -70,7 +91,10 @@ describe('PostsService', () => {
       const findOneSpy = jest.spyOn(prisma.post, 'findUnique');
       const foundPost = await service.findOne('1');
 
-      expect(findOneSpy).toBeCalledWith({ where: { id: '1' } });
+      expect(findOneSpy).toBeCalledWith({
+        where: { id: '1' },
+        include: { media: true },
+      });
       expect(foundPost).toEqual(ONE_POST);
     });
   });
@@ -99,6 +123,16 @@ describe('PostsService', () => {
 
       expect(removeSpy).toBeCalledWith({ where: { id: '1' } });
       expect(removedUser).toEqual(ONE_POST);
+    });
+  });
+
+  describe('addMediaToPost()', () => {
+    it('should return a single post with updated media', async () => {
+      const updateSpy = jest.spyOn(prisma.post, 'update');
+      const updatedPost = await service.addMediaToPost('1', POST_FILES);
+
+      expect(updateSpy).toBeCalledTimes(1);
+      expect(updatedPost).toEqual(ONE_POST);
     });
   });
 });

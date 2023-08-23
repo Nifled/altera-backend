@@ -100,6 +100,7 @@ export class PostsController {
   }
 
   @Post(':id/upload-file')
+  @ApiCreatedResponse({ type: PostEntity })
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(AnyFilesInterceptor())
   async addMediaToPost(

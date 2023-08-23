@@ -35,22 +35,30 @@ describe('StorageService', () => {
     expect(service).toBeDefined();
   });
 
-  describe('uploadFile()', () => {
-    const testFile: Partial<Express.Multer.File> = {
-      mimetype: 'image/jpeg',
-      buffer: Buffer.from('This is a test file'),
-    };
+  describe('uploadFiles()', () => {
+    const testFiles: Partial<Express.Multer.File>[] = [
+      {
+        mimetype: 'image/jpeg',
+        buffer: Buffer.from('This is a test file'),
+        originalname: 'test.jpg',
+      },
+      {
+        mimetype: 'image/png',
+        buffer: Buffer.from('This is a test file'),
+        originalname: 'test.png',
+      },
+    ];
 
-    it('should successfully upload a file and return image url', async () => {
+    it('should successfully upload a file and return image urls', async () => {
       const clientSpy = jest.spyOn(mockS3Instance, 'send');
-      const imageUrl = await service.uploadFile(
-        testFile as Express.Multer.File,
-        'test',
+      const imageUrls = await service.uploadFiles(
+        testFiles as Express.Multer.File[],
+        'test/',
       );
 
-      expect(clientSpy).toBeCalledTimes(1);
-      expect(imageUrl).toStartWith('https://');
-      expect(imageUrl).toEndWith('test');
+      expect(clientSpy).toBeCalledTimes(testFiles.length);
+      expect(imageUrls[0]).toStartWith('https://');
+      expect(imageUrls[0].includes('test')).toBe(true);
     });
   });
 });
