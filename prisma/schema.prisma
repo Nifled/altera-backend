@@ -12,15 +12,16 @@ datasource db {
 }
 
 model User {
-  id            String   @id @default(cuid())
-  email         String   @unique
+  id            String         @id @default(cuid())
+  email         String         @unique
   password      String?
-  firstName     String?  @db.VarChar(255)
-  lastName      String?  @db.VarChar(255)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  firstName     String?        @db.VarChar(255)
+  lastName      String?        @db.VarChar(255)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
   refreshToken  String?
   posts         Post[]
+  PostReactions PostReaction[]
 
   provider      UserIdentityProvider? @relation(fields: [providerId], references: [id])
   providerId    String?
@@ -33,17 +34,18 @@ model UserIdentityProvider {
   id        String   @id @default(cuid())
   createdAt DateTime @default(now())
   name      String   @unique
-  users      User[]
+  users     User[]
 }
 
 model Post {
-  id        String   @id @default(cuid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  caption   String?  @db.VarChar(255)
-  author    User     @relation(fields: [authorId], references: [id])
+  id        String         @id @default(cuid())
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  caption   String?        @db.VarChar(255)
+  author    User           @relation(fields: [authorId], references: [id])
   authorId  String
   media     PostMedia[]
+  reactions PostReaction[]
 
   @@index([authorId])
 }
@@ -61,4 +63,26 @@ model PostMedia {
   // order (in relation to a Post)
 
   @@index([postId])
+}
+
+model PostReaction {
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  post      Post             @relation(fields: [postId], references: [id])
+  postId    String
+  user      User             @relation(fields: [userId], references: [id])
+  userId    String
+  type      PostReactionType @relation(fields: [typeId], references: [id])
+  typeId    String
+
+  @@id([postId, userId]) // Composite primary key
+  @@index([postId])
+  @@index([userId])
+  @@index([typeId])
+}
+
+model PostReactionType {
+  id           String         @id @default(cuid())
+  name         String         @unique // POST_REACTION_NAMES = ['like','love','haha','wow','sad','angry'];
+  PostReaction PostReaction[]
 }
