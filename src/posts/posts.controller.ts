@@ -31,6 +31,8 @@ import { PaginationPageEntity } from '../common/pagination/entities/pagination-p
 import { ApiOkResponsePaginated } from '../common/pagination/api-ok-response-paginated.decorator';
 import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import { ImageFilesValidatorPipe } from '../storage/pipes/image-file-validator.pipe';
+import { PostReactionDto } from './dto/post-reaction.dto';
+import { PostReactionEntity } from './entities/post-reaction.entity';
 
 @Controller({ path: 'posts', version: '1' })
 @ApiTags('posts')
@@ -97,6 +99,29 @@ export class PostsController {
   @ApiOkResponse({ type: PostEntity })
   remove(@Param('id') id: string) {
     return this.postsService.remove(id);
+  }
+
+  @Post(':id/reactions')
+  @ApiOkResponse({ type: PostEntity })
+  async addReaction(
+    @Param('id') id: string,
+    @Body() postReactionDto: PostReactionDto,
+  ) {
+    const postReaction = await this.postsService.addReaction(
+      id,
+      postReactionDto,
+    );
+
+    return new PostReactionEntity(postReaction);
+  }
+
+  @Delete(':id/reactions')
+  @ApiOkResponse({ type: PostEntity })
+  async removeReaction(
+    @Param('id') id: string,
+    @Body() postReactionDto: PostReactionDto,
+  ) {
+    await this.postsService.removeReaction(id, postReactionDto);
   }
 
   @Post(':id/upload-file')

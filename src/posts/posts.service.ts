@@ -1,10 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { PaginationParamsDto } from '../common/pagination/pagination-params.dto';
 import { StorageService } from '../storage/storage.service';
 import { PostMediaDto } from './dto/post-media.dto';
+import { PostReactionDto } from './dto/post-reaction.dto';
 
 @Injectable()
 export class PostsService {
@@ -67,6 +68,71 @@ export class PostsService {
 
   remove(id: string) {
     return this.prisma.post.delete({ where: { id } });
+  }
+
+  async addReaction(postId: string, postReactionDto: PostReactionDto) {
+    const postReactionType = await this.prisma.postReactionType.upsert({
+      where: { name: postReactionDto.reactionType },
+      create: { name: postReactionDto.reactionType },
+      update: {},
+    });
+
+    const existingPostReaction = await this.prisma.postReaction.findUnique({
+      where: {
+        postId_userId: {
+          postId,
+          userId: postReactionDto.userId,
+        },
+        typeId: postReactionType.id,
+      },
+      include: { type: true },
+    });
+
+    if (existingPostReaction) {
+      return existingPostReaction;
+    }
+
+    // If there's already an existing reaction for the user+post, update it. Otherwise,
+    // create a new one. This allows for a user to react only once to a single post.
+    return this.prisma.postReaction.upsert({
+      where: {
+        postId_userId: {
+          postId,
+          userId: postReactionDto.userId,
+        },
+      },
+      create: {
+        postId,
+        userId: postReactionDto.userId,
+        typeId: postReactionType.id,
+      },
+      update: {
+        typeId: postReactionType.id,
+      },
+      include: { type: true },
+    });
+  }
+
+  async removeReaction(postId: string, postReactionDto: PostReactionDto) {
+    const postReactionType = await this.prisma.postReactionType.findUnique({
+      where: { name: postReactionDto.reactionType },
+    });
+
+    if (!postReactionType) {
+      throw new NotFoundException(
+        `Post reaction ${postReactionDto.reactionType} type not found.`,
+      );
+    }
+
+    return this.prisma.postReaction.delete({
+      where: {
+        postId_userId: {
+          postId,
+          userId: postReactionDto.userId,
+        },
+        typeId: postReactionType.id,
+      },
+    });
   }
 
   async addMediaToPost(postId: string, files: Express.Multer.File[]) {
