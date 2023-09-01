@@ -71,6 +71,14 @@ export class PostsService {
   }
 
   async addReaction(postId: string, postReactionDto: PostReactionDto) {
+    const isValidPost = await this.prisma.post.findUnique({
+      where: { id: postId },
+    });
+
+    if (!isValidPost) {
+      throw new NotFoundException(`Post not found with id: ${postId}.`);
+    }
+
     const postReactionType = await this.prisma.postReactionType.upsert({
       where: { name: postReactionDto.reactionType },
       create: { name: postReactionDto.reactionType },
@@ -101,6 +109,9 @@ export class PostsService {
           userId: postReactionDto.userId,
         },
       },
+      // In an `upsert` if we pass in invalid data to a FK (like `postId`), Prisma will not throw an error
+      // if the related entity does not exist. So we check if the postId exists (see first check of this method)
+      // https://www.prisma.io/docs/concepts/components/prisma-schema/relations/relation-mode#which-foreign-key-constraints-are-emulated
       create: {
         postId,
         userId: postReactionDto.userId,

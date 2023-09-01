@@ -4,6 +4,7 @@ import { PostsService } from './posts.service';
 import { Post } from '@prisma/client';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PaginationParamsDto } from '../common/pagination/pagination-params.dto';
+import { PostReactionDto } from './dto/post-reaction.dto';
 
 const POSTS_ARRAY: Partial<Post>[] = [
   { id: '1', caption: 'This is a cool post #1', authorId: 'denzel' },
@@ -11,12 +12,21 @@ const POSTS_ARRAY: Partial<Post>[] = [
 ];
 const ONE_POST = POSTS_ARRAY[0];
 
+const ONE_POST_REACTION = {
+  id: '1',
+  postId: '1',
+  userId: '1',
+  typeId: '1',
+};
+
 const SERVICE = {
   findAll: jest.fn().mockResolvedValue(POSTS_ARRAY),
   findOne: jest.fn().mockResolvedValue(ONE_POST),
   create: jest.fn().mockResolvedValue(ONE_POST),
   update: jest.fn().mockResolvedValue(ONE_POST),
   remove: jest.fn().mockResolvedValue(ONE_POST),
+  addReaction: jest.fn().mockResolvedValue(ONE_POST_REACTION),
+  removeReaction: jest.fn(),
 };
 
 const POST_FILES = [
@@ -102,6 +112,38 @@ describe('PostsController', () => {
 
       expect(removeSpy).toBeCalledWith('1');
       expect(post).toEqual(ONE_POST);
+    });
+  });
+
+  describe('POST /posts/:id/reactions addReaction()', () => {
+    const postReactionDto: PostReactionDto = {
+      userId: 'some user id',
+      reactionType: 'like',
+    };
+
+    it('should successfully add a reaction to a post', async () => {
+      const spy = jest.spyOn(service, 'addReaction');
+      const updatedPost = await controller.addReaction(
+        'post1',
+        postReactionDto,
+      );
+
+      expect(spy).toBeCalledTimes(1);
+      expect(updatedPost).toEqual(ONE_POST_REACTION);
+    });
+  });
+
+  describe('DELETE /posts/:id/reactions removeReaction()', () => {
+    const postReactionDto: PostReactionDto = {
+      userId: 'some user id',
+      reactionType: 'like',
+    };
+
+    it('should successfully add a reaction to a post', async () => {
+      const spy = jest.spyOn(service, 'removeReaction');
+      await controller.removeReaction('post1', postReactionDto);
+
+      expect(spy).toBeCalledTimes(1);
     });
   });
 });

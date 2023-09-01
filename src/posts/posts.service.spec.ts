@@ -7,12 +7,25 @@ import { PaginationParamsDto } from '../common/pagination/pagination-params.dto'
 import { ConfigService } from '@nestjs/config';
 import { StorageService } from '../storage/storage.service';
 import { PostEntity } from './entities/post.entity';
+import { PostReactionDto } from './dto/post-reaction.dto';
 
 const POSTS_ARRAY: Partial<PostEntity>[] = [
   { caption: 'This is a cool post #1', authorId: 'denzel', media: [] },
   { caption: 'This is an alright post #2', authorId: 'denzel', media: [] },
 ];
 const ONE_POST = POSTS_ARRAY[0];
+
+const ONE_POST_REACTION = {
+  id: '1',
+  postId: '1',
+  userId: '1',
+  typeId: '1',
+};
+
+const ONE_POST_REACTION_TYPE = {
+  id: '1',
+  name: 'like',
+};
 
 const POST_FILES = [
   {
@@ -32,6 +45,16 @@ const DB = {
     create: jest.fn().mockResolvedValue(ONE_POST),
     update: jest.fn().mockResolvedValue(ONE_POST),
     delete: jest.fn().mockResolvedValue(ONE_POST),
+  },
+  postReaction: {
+    create: jest.fn().mockResolvedValue(ONE_POST_REACTION),
+    findUnique: jest.fn().mockResolvedValue(ONE_POST_REACTION),
+    upsert: jest.fn(),
+    delete: jest.fn(),
+  },
+  postReactionType: {
+    findUnique: jest.fn().mockResolvedValue(ONE_POST_REACTION_TYPE),
+    upsert: jest.fn().mockResolvedValue(ONE_POST_REACTION_TYPE),
   },
 };
 
@@ -123,6 +146,39 @@ describe('PostsService', () => {
 
       expect(removeSpy).toBeCalledWith({ where: { id: '1' } });
       expect(removedUser).toEqual(ONE_POST);
+    });
+  });
+
+  describe('addReaction()', () => {
+    const postReactionDto: PostReactionDto = {
+      userId: '1',
+      reactionType: 'like',
+    };
+
+    it('should create a new post reaction', async () => {
+      const upsertSpy = jest.spyOn(prisma.postReactionType, 'upsert');
+      const findSpy = jest.spyOn(prisma.postReaction, 'findUnique');
+      const addedReaction = await service.addReaction('1', postReactionDto);
+
+      expect(upsertSpy).toBeCalledTimes(1);
+      expect(findSpy).toBeCalledTimes(1);
+      expect(addedReaction).toEqual(ONE_POST_REACTION);
+    });
+  });
+
+  describe('removeReaction()', () => {
+    const postReactionDto: PostReactionDto = {
+      userId: '1',
+      reactionType: 'like',
+    };
+
+    it('should remove a single post reaction', async () => {
+      const findSpy = jest.spyOn(prisma.postReactionType, 'findUnique');
+      const removeSpy = jest.spyOn(prisma.postReaction, 'delete');
+      await service.removeReaction('1', postReactionDto);
+
+      expect(findSpy).toBeCalledTimes(1);
+      expect(removeSpy).toBeCalledTimes(1);
     });
   });
 

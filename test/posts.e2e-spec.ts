@@ -17,6 +17,7 @@ import { CreatePostDto } from '../src/posts/dto/create-post.dto';
 import { CreateUserDto } from '../src/users/dto/create-user.dto';
 import { Post, User } from '@prisma/client';
 import { ConfigService } from '@nestjs/config';
+import { PostReactionDto } from '../src/posts/dto/post-reaction.dto';
 
 describe('PostsController (e2e)', () => {
   let app: INestApplication;
@@ -223,12 +224,16 @@ describe('PostsController (e2e)', () => {
 
   describe('/posts/:id (DELETE)', () => {
     it('should delete a post', async () => {
+      const posts = await prisma.post.findMany({
+        where: { NOT: { id: post.id } }, // we don't want to delete the `post` reference (it's used in other tests)
+      });
+
       const { status, body } = await request(httpServer).delete(
-        `/posts/${post.id}`,
+        `/posts/${posts[0].id}`,
       );
 
       expect(status).toBe(200);
-      expect(body.id).toBe(post.id);
+      expect(body.id).toBe(posts[0].id);
     });
 
     it('should fail to delete a post with wrong id', async () => {
@@ -237,6 +242,83 @@ describe('PostsController (e2e)', () => {
       );
 
       expect(status).toBe(404);
+    });
+  });
+
+  describe('/posts/:id/reactions (POST + DELETE)', () => {
+    it('should create a new post reaction', async () => {
+      const postReactionDto: PostReactionDto = {
+        userId: user.id,
+        reactionType: 'like',
+      };
+
+      const { status, body } = await request(httpServer)
+        .post(`/posts/${post.id}/reactions`)
+        .send({ ...postReactionDto });
+
+      expect(status).toBe(201);
+      expect(body.userId).toBe(postReactionDto.userId);
+      expect(body.postId).toBe(post.id);
+      expect(body.reactionType).toBe(postReactionDto.reactionType);
+
+      // Check the post and make sure the reaction was added
+      const updatedPost = await prisma.post.findUnique({
+        where: { id: post.id },
+        include: { reactions: true },
+      });
+      expect(updatedPost?.reactions?.length).toBe(1);
+    });
+
+    it('should fail to create a new post reaction with bad postId', async () => {
+      const postReactionDto: PostReactionDto = {
+        userId: user.id,
+        reactionType: 'like',
+      };
+
+      const { status } = await request(httpServer)
+        .post(`/posts/someRandomPostId/reactions`)
+        .send({ ...postReactionDto });
+
+      expect(status).toBe(404);
+    });
+
+    it('should fail to create a new post reaction with bad data', async () => {
+      const badPostReactionDto: PostReactionDto = {
+        userId: user.id,
+        reactionType: 'hate',
+      };
+
+      const { status } = await request(httpServer)
+        .post(`/posts/${post.id}/reactions`)
+        .send({ ...badPostReactionDto });
+
+      expect(status).toBe(400);
+    });
+
+    it('should delete a post reaction', async () => {
+      const postReactionDto: PostReactionDto = {
+        userId: user.id,
+        reactionType: 'like',
+      };
+
+      const { status } = await request(httpServer)
+        .delete(`/posts/${post.id}/reactions`)
+        .send({ ...postReactionDto });
+
+      expect(status).toBe(200);
+    });
+
+    it('should fail to delete a new post reaction with bad data', async () => {
+      const badPostReactionDto: PostReactionDto = {
+        userId: user.id,
+        reactionType: 'hate',
+      };
+
+      const { status } = await request(httpServer)
+        .delete(`/posts/${post.id}/reactions`)
+        .send({ ...badPostReactionDto });
+
+      expect(status).toBe(400);
     });
   });
 
