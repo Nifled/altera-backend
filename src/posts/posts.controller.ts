@@ -8,11 +8,14 @@ import {
   Delete,
   NotFoundException,
   UsePipes,
+  UseInterceptors,
+  UploadedFiles,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import {
+  ApiConsumes,
   ApiCreatedResponse,
   ApiOkResponse,
   ApiQuery,
@@ -26,6 +29,10 @@ import { PostsOrderByDto } from './dto/posts-order-by.dto';
 import { PaginationMetaEntity } from '../common/pagination/entities/pagination-meta.entity';
 import { PaginationPageEntity } from '../common/pagination/entities/pagination-page.entity';
 import { ApiOkResponsePaginated } from '../common/pagination/api-ok-response-paginated.decorator';
+import { AnyFilesInterceptor } from '@nestjs/platform-express';
+import { ImageFilesValidatorPipe } from '../storage/pipes/image-file-validator.pipe';
+import { PostReactionDto } from './dto/post-reaction.dto';
+import { PostReactionEntity } from './entities/post-reaction.entity';
 
 @Controller({ path: 'posts', version: '1' })
 @ApiTags('posts')
@@ -34,9 +41,15 @@ export class PostsController {
 
   @Post()
   @ApiCreatedResponse({ type: PostEntity })
-  @UsePipes(new PayloadExistsPipe())
-  create(@Body() createPostDto: CreatePostDto) {
-    return this.postsService.create(createPostDto);
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(AnyFilesInterceptor())
+  async create(
+    @UploadedFiles(new ImageFilesValidatorPipe()) files: Express.Multer.File[],
+    @Body(new PayloadExistsPipe()) createPostDto: CreatePostDto,
+  ) {
+    createPostDto.files = files;
+    const post = await this.postsService.create(createPostDto);
+    return new PostEntity(post);
   }
 
   @Get()
@@ -72,7 +85,7 @@ export class PostsController {
       throw new NotFoundException(`Post not found with id: ${id}.`);
     }
 
-    return post;
+    return new PostEntity(post);
   }
 
   @Patch(':id')
@@ -86,5 +99,41 @@ export class PostsController {
   @ApiOkResponse({ type: PostEntity })
   remove(@Param('id') id: string) {
     return this.postsService.remove(id);
+  }
+
+  @Post(':id/reactions')
+  @ApiOkResponse({ type: PostEntity })
+  async addReaction(
+    @Param('id') id: string,
+    @Body() postReactionDto: PostReactionDto,
+  ) {
+    const postReaction = await this.postsService.addReaction(
+      id,
+      postReactionDto,
+    );
+
+    return new PostReactionEntity(postReaction);
+  }
+
+  @Delete(':id/reactions')
+  @ApiOkResponse({ type: PostEntity })
+  async removeReaction(
+    @Param('id') id: string,
+    @Body() postReactionDto: PostReactionDto,
+  ) {
+    await this.postsService.removeReaction(id, postReactionDto);
+  }
+
+  @Post(':id/upload-file')
+  @ApiCreatedResponse({ type: PostEntity })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(AnyFilesInterceptor())
+  async addMediaToPost(
+    @Param('id') id: string,
+    @UploadedFiles(new ImageFilesValidatorPipe()) files: Express.Multer.File[],
+  ) {
+    const post = await this.postsService.addMediaToPost(id, files);
+
+    return new PostEntity(post);
   }
 }

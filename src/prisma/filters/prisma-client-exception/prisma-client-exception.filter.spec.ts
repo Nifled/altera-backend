@@ -1,4 +1,4 @@
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { Prisma } from '@prisma/client';
 import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaClientExceptionFilter } from './prisma-client-exception.filter';
 import { HttpStatus } from '@nestjs/common';
@@ -43,7 +43,7 @@ describe('PrismaClientExceptionFilter', () => {
   });
 
   it('should catch and handle PrismaClientKnownRequestError', () => {
-    const mockPrismaException = new PrismaClientKnownRequestError(
+    const mockPrismaException = new Prisma.PrismaClientKnownRequestError(
       'Unique constraint violation',
       { code: 'P2002', clientVersion: '1' },
     );

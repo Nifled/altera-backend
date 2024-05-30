@@ -8,7 +8,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 
 interface StorageProvider {
-  uploadFile: (file: Express.Multer.File, key: string) => Promise<string>;
+  uploadFiles: (files: Express.Multer.File[], key: string) => Promise<string[]>;
 }
 
 @Injectable()
@@ -19,40 +19,66 @@ export class StorageService implements StorageProvider {
   private logger = new Logger(StorageService.name);
 
   constructor(config: ConfigService) {
-    this.createProviderInstance(config);
+    this.createS3ProviderInstance(config);
   }
 
   /**
-   * Upload a file to storage provider
-   * @param file The file to upload
-   * @param key The key of the file
-   * @returns The url of the uploaded file
+   * Upload file/s to storage provider
+   * @param files Array of files to upload
+   * @param keyPrefix String to use as a prefix for the s3 upload key for files
+   * @returns An array containing the urls of the uploaded files
    */
-  async uploadFile(file: Express.Multer.File, key: string): Promise<string> {
-    const input: PutObjectCommandInput = {
-      Bucket: this.bucket,
-      Body: file.buffer,
-      Key: key,
-      ContentType: file.mimetype,
-      ACL: 'public-read',
-    };
+  async uploadFiles(
+    files: Express.Multer.File[],
+    keyPrefix?: string,
+  ): Promise<string[]> {
+    // To upload multiple files, create an array of Promises for each
+    // request and `Promise.all` that bitch
+    const uploadPromises: Promise<string>[] = files.map((file) => {
+      return new Promise(async (resolve, reject) => {
+        const key = `${keyPrefix || ''}${
+          file.originalname
+        }${Date.now()}_${Math.round(Math.random() * 1000)}`;
+
+        const fileInput: PutObjectCommandInput = {
+          Bucket: this.bucket,
+          Body: file.buffer,
+          Key: key,
+          ContentType: file.mimetype,
+          ACL: 'public-read',
+        };
+
+        try {
+          const response = await this.client.send(
+            new PutObjectCommand(fileInput),
+          );
+
+          if (response?.$metadata?.httpStatusCode !== 200) {
+            // If there is other status code other than 200, the file was not uploaded
+            reject(new BadRequestException('Failed to upload file.'));
+          }
+
+          // Return the url of the uploaded file
+          resolve(
+            `https://${this.bucket}.s3.${this.region}.amazonaws.com/${key}`,
+          );
+        } catch (error) {
+          reject(error);
+        }
+      });
+    });
 
     try {
-      const response = await this.client.send(new PutObjectCommand(input));
+      const fileUrls = await Promise.all(uploadPromises);
 
-      if (response?.$metadata?.httpStatusCode === 200) {
-        return `https://${this.bucket}.s3.${this.region}.amazonaws.com/${key}`;
-      }
-
-      // If there is other status code other than 200, the image was not uploaded
-      throw new BadRequestException('Failed to upload image.');
+      return fileUrls;
     } catch (error) {
-      this.logger.error("Couldn't upload image to storage provider.", error);
+      this.logger.error("Couldn't upload files to storage provider.", error);
       throw error;
     }
   }
 
-  private createProviderInstance(config: ConfigService) {
+  private createS3ProviderInstance(config: ConfigService) {
     const bucket = config.get<string>('s3.bucket');
     const region = config.get<string>('s3.region');
     const accessKeyId = config.get<string>('s3.accessKeyId');
